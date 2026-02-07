@@ -1,0 +1,236 @@
+---
+import Icon from '../components/Icon.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  ogImage?: string;
+}
+
+const { title, description = 'Secure Auto Lab - 自動化×セキュリティの実験場', ogImage } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+
+const categories = [
+  { slug: 'automation', label: '自動化', icon: 'zap' as const },
+  { slug: 'ai', label: 'AI', icon: 'bot' as const },
+  { slug: 'security', label: 'セキュリティ', icon: 'shield' as const },
+  { slug: 'dev-tips', label: 'Tips', icon: 'lightbulb' as const },
+  { slug: 'projects', label: 'プロジェクト', icon: 'rocket' as const },
+];
+---
+
+<!doctype html>
+<html lang="ja" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="alternate" type="application/rss+xml" title="RSS Feed" href="/rss.xml" />
+
+    <title>{title}</title>
+    <meta name="title" content={title} />
+    <meta name="description" content={description} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:site_name" content="Secure Auto Lab" />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content={canonicalURL} />
+    <meta property="twitter:title" content={title} />
+    <meta property="twitter:description" content={description} />
+    {ogImage && <meta property="twitter:image" content={ogImage} />}
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+JP:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXX" crossorigin="anonymous"></script>
+  </head>
+  <body class="min-h-screen bg-dark-950 text-dark-200 font-sans antialiased overflow-x-hidden">
+    <!-- Animated background -->
+    <div class="fixed inset-0 -z-10">
+      <div class="absolute inset-0 bg-mesh-gradient opacity-60"></div>
+      <div class="absolute top-0 left-1/4 w-96 h-96 bg-accent-purple/20 rounded-full blur-3xl animate-float"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-80 h-80 bg-accent-cyan/20 rounded-full blur-3xl animate-float" style="animation-delay: -3s;"></div>
+      <div class="absolute top-1/2 left-1/2 w-64 h-64 bg-accent-pink/10 rounded-full blur-3xl animate-float" style="animation-delay: -5s;"></div>
+    </div>
+
+    <!-- Noise texture overlay -->
+    <div class="fixed inset-0 -z-10 opacity-[0.015]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 256 256%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noise%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%224%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noise)%22/%3E%3C/svg%3E');"></div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-dark-950/80 border-b border-white/5">
+      <nav class="max-w-6xl mx-auto px-6 py-4">
+        <div class="flex items-center justify-between">
+          <!-- Logo -->
+          <a href="/" class="group flex items-center gap-3">
+            <div class="relative">
+              <div class="absolute inset-0 bg-gradient-to-r from-accent-cyan to-accent-purple rounded-xl blur opacity-50 group-hover:opacity-75 transition-opacity"></div>
+              <div class="relative w-10 h-10 bg-dark-900 rounded-xl flex items-center justify-center border border-white/10 text-accent-cyan">
+                <Icon name="shieldCheck" size={22} />
+              </div>
+            </div>
+            <div>
+              <span class="text-lg font-bold bg-gradient-to-r from-white to-dark-300 bg-clip-text text-transparent">
+                Secure Auto Lab
+              </span>
+              <span class="hidden sm:block text-xs text-dark-500">自動化 × セキュリティ</span>
+            </div>
+          </a>
+
+          <!-- Navigation -->
+          <div class="flex items-center gap-1">
+            <a href="/articles" class="px-4 py-2 text-sm text-dark-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
+              Articles
+            </a>
+            <a href="/about" class="px-4 py-2 text-sm text-dark-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
+              About
+            </a>
+            <a href="/rss.xml" class="p-2 text-dark-400 hover:text-white rounded-lg hover:bg-white/5 transition-all">
+              <Icon name="rss" size={20} />
+            </a>
+          </div>
+        </div>
+
+        <!-- Category pills -->
+        <div class="flex items-center gap-2 mt-4 overflow-x-auto pb-2 scrollbar-hide">
+          {categories.map((cat) => (
+            <a
+              href={`/category/${cat.slug}`}
+              class="flex-shrink-0 inline-flex items-center gap-2 px-4 py-1.5 text-sm text-dark-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full border border-white/5 hover:border-white/10 transition-all"
+            >
+              <Icon name={cat.icon} size={14} />
+              {cat.label}
+            </a>
+          ))}
+        </div>
+      </nav>
+    </header>
+
+    <!-- Main content -->
+    <main class="max-w-6xl mx-auto px-6 py-12">
+      <slot />
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 mt-24">
+      <div class="max-w-6xl mx-auto px-6 py-16">
+        <div class="grid md:grid-cols-4 gap-12">
+          <!-- Brand -->
+          <div class="md:col-span-2">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 bg-gradient-to-br from-accent-cyan to-accent-purple rounded-xl flex items-center justify-center text-white">
+                <Icon name="shieldCheck" size={22} />
+              </div>
+              <span class="text-xl font-bold text-white">Secure Auto Lab</span>
+            </div>
+            <p class="text-dark-400 text-sm leading-relaxed max-w-md">
+              自動化とセキュリティの実験場。<br />
+              作ったアプリ・ツールの技術解説と開発ログを発信しています。
+            </p>
+            <div class="flex items-center gap-3 mt-6">
+              <a href="https://twitter.com/" target="_blank" rel="noopener" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-dark-400 hover:text-white transition-all">
+                <Icon name="twitter" size={18} />
+              </a>
+              <a href="https://github.com/" target="_blank" rel="noopener" class="w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-dark-400 hover:text-white transition-all">
+                <Icon name="github" size={18} />
+              </a>
+            </div>
+          </div>
+
+          <!-- Links -->
+          <div>
+            <h4 class="text-white font-semibold mb-4">カテゴリー</h4>
+            <ul class="space-y-3">
+              {categories.map((cat) => (
+                <li>
+                  <a href={`/category/${cat.slug}`} class="inline-flex items-center gap-2 text-sm text-dark-400 hover:text-white transition-colors">
+                    <Icon name={cat.icon} size={14} />
+                    {cat.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div>
+            <h4 class="text-white font-semibold mb-4">リンク</h4>
+            <ul class="space-y-3 text-sm">
+              <li><a href="/about" class="text-dark-400 hover:text-white transition-colors">About</a></li>
+              <li><a href="/rss.xml" class="text-dark-400 hover:text-white transition-colors">RSS Feed</a></li>
+              <li><a href="https://note.com/" target="_blank" rel="noopener" class="text-dark-400 hover:text-white transition-colors">Note (有料記事)</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <p class="text-sm text-dark-500">
+            &copy; {new Date().getFullYear()} Secure Auto Lab. All rights reserved.
+          </p>
+          <p class="text-xs text-dark-600">
+            Built with Astro & Tailwind CSS
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
+
+<style is:global>
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', 'Noto Sans JP', system-ui, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Selection color */
+  ::selection {
+    background: rgba(168, 85, 247, 0.3);
+  }
+
+  /* Gradient text */
+  .gradient-text {
+    background: linear-gradient(135deg, #22d3ee 0%, #a855f7 50%, #ec4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+</style>

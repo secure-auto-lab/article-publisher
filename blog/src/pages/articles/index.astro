@@ -1,0 +1,107 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+import { getCollection } from 'astro:content';
+
+const articles = (await getCollection('articles'))
+  .sort((a, b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
+
+const categoryMeta: Record<string, { label: string; icon: 'zap' | 'bot' | 'shield' | 'lightbulb' | 'rocket'; gradient: string }> = {
+  automation: { label: '自動化', icon: 'zap', gradient: 'from-amber-500 to-orange-600' },
+  ai: { label: 'AI', icon: 'bot', gradient: 'from-violet-500 to-purple-600' },
+  security: { label: 'セキュリティ', icon: 'shield', gradient: 'from-emerald-500 to-teal-600' },
+  'dev-tips': { label: 'Tips', icon: 'lightbulb', gradient: 'from-cyan-500 to-blue-600' },
+  projects: { label: 'プロジェクト', icon: 'rocket', gradient: 'from-pink-500 to-rose-600' },
+};
+
+const formatDate = (dateStr: string | Date) => {
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+// Group articles by year
+const articlesByYear = articles.reduce((acc, article) => {
+  const year = new Date(article.data.pubDate).getFullYear().toString();
+  if (!acc[year]) acc[year] = [];
+  acc[year].push(article);
+  return acc;
+}, {} as Record<string, typeof articles>);
+
+const years = Object.keys(articlesByYear).sort((a, b) => Number(b) - Number(a));
+---
+
+<BaseLayout title="記事一覧 | Secure Auto Lab">
+  <!-- Back link -->
+  <a
+    href="/"
+    class="inline-flex items-center gap-2 text-sm text-dark-400 hover:text-white mb-8 transition-colors"
+  >
+    <Icon name="arrowLeft" size={16} />
+    トップに戻る
+  </a>
+
+  <!-- Header -->
+  <header class="mb-12">
+    <h1 class="text-heading-1 font-bold text-white mb-4 flex items-center gap-4">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center text-white">
+        <Icon name="fileText" size={24} />
+      </div>
+      記事一覧
+    </h1>
+    <p class="text-lg text-dark-400">{articles.length} 件の記事</p>
+  </header>
+
+  {years.map((year) => (
+    <section class="mb-16">
+      <h2 class="text-xl font-bold text-dark-300 mb-6 pb-3 border-b border-white/10 flex items-center gap-2">
+        <span class="text-accent-cyan">{year}</span>
+        <span class="text-sm font-normal text-dark-500">({articlesByYear[year].length})</span>
+      </h2>
+      <div class="space-y-4">
+        {articlesByYear[year].map((article, index) => (
+          <a
+            href={`/articles/${article.slug}`}
+            class="group block animate-slide-up"
+            style={`animation-delay: ${index * 0.03}s;`}
+          >
+            <article class="relative overflow-hidden rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/[0.04] transition-all p-5">
+              <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+                <!-- Date & Category -->
+                <div class="flex items-center gap-3 sm:w-40 flex-shrink-0">
+                  <time
+                    datetime={article.data.pubDate.toISOString()}
+                    class="text-sm text-dark-500"
+                  >
+                    {formatDate(article.data.pubDate)}
+                  </time>
+                  <span class={`w-6 h-6 rounded-md bg-gradient-to-br ${categoryMeta[article.data.category || 'dev-tips'].gradient} flex items-center justify-center text-white`}>
+                    <Icon name={categoryMeta[article.data.category || 'dev-tips'].icon} size={12} />
+                  </span>
+                </div>
+
+                <!-- Content -->
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-base font-medium text-white group-hover:text-accent-cyan transition-colors line-clamp-1">
+                    {article.data.title}
+                  </h3>
+                  {article.data.tags && (
+                    <div class="flex gap-2 mt-2">
+                      {article.data.tags.slice(0, 3).map((tag: string) => (
+                        <span class="text-xs text-dark-500">#{tag}</span>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <!-- Arrow -->
+                <div class="hidden sm:flex w-8 h-8 rounded-full bg-white/5 items-center justify-center group-hover:bg-accent-cyan/20 transition-all flex-shrink-0">
+                  <Icon name="chevronRight" class="text-dark-400 group-hover:text-accent-cyan transition-colors" size={16} />
+                </div>
+              </div>
+            </article>
+          </a>
+        ))}
+      </div>
+    </section>
+  ))}
+</BaseLayout>

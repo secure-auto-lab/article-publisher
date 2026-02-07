@@ -1,0 +1,46 @@
+---
+const supportPlatforms = [
+  {
+    name: 'OFUSE',
+    url: 'https://ofuse.me/', // Update with your OFUSE page
+    gradient: 'from-pink-500 to-rose-600',
+    icon: '💝',
+    description: '投げ銭で応援',
+  },
+  {
+    name: 'Note',
+    url: 'https://note.com/', // Update with your Note page
+    gradient: 'from-green-500 to-emerald-600',
+    icon: '📝',
+    description: '有料記事を購入',
+  },
+  {
+    name: 'Amazon',
+    url: 'https://www.amazon.jp/hz/wishlist/', // Update with your wishlist
+    gradient: 'from-amber-500 to-orange-600',
+    icon: '🎁',
+    description: 'ほしい物リスト',
+  },
+];
+---
+
+<div class="flex flex-wrap gap-3">
+  {supportPlatforms.map((platform) => (
+    <a
+      href={platform.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="group relative overflow-hidden inline-flex items-center gap-3 px-5 py-3 rounded-xl transition-all hover:shadow-lg"
+    >
+      <div class={`absolute inset-0 bg-gradient-to-r ${platform.gradient} opacity-10 group-hover:opacity-20 transition-opacity`}></div>
+      <div class="absolute inset-0 border border-white/10 group-hover:border-white/20 rounded-xl transition-colors"></div>
+      <div class="relative flex items-center gap-3">
+        <span class="text-xl">{platform.icon}</span>
+        <div class="text-left">
+          <div class="font-medium text-white text-sm">{platform.name}</div>
+          <div class="text-xs text-dark-400">{platform.description}</div>
+        </div>
+      </div>
+    </a>
+  ))}
+</div>

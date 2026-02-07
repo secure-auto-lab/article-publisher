@@ -1,0 +1,45 @@
+---
+interface Props {
+  slot?: 'article-top' | 'article-bottom' | 'sidebar';
+}
+
+const { slot = 'article-bottom' } = Astro.props;
+
+// AdSense configuration from environment
+const clientId = import.meta.env.ADSENSE_CLIENT_ID || 'ca-pub-XXXXXXXXXX';
+const adSlots = {
+  'article-top': import.meta.env.ADSENSE_SLOT_TOP || '1234567890',
+  'article-bottom': import.meta.env.ADSENSE_SLOT_BOTTOM || '0987654321',
+  'sidebar': import.meta.env.ADSENSE_SLOT_SIDEBAR || '1122334455',
+};
+
+const adSlotId = adSlots[slot];
+const isProd = import.meta.env.PROD;
+---
+
+{isProd ? (
+  <div class="adsense-container my-8">
+    <ins
+      class="adsbygoogle"
+      style="display:block"
+      data-ad-client={clientId}
+      data-ad-slot={adSlotId}
+      data-ad-format="auto"
+      data-full-width-responsive="true"
+    />
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+  </div>
+) : (
+  <div class="my-8 p-4 bg-gray-100 border-2 border-dashed border-gray-300 rounded-lg text-center text-gray-500">
+    <p class="text-sm">[AdSense Placeholder: {slot}]</p>
+    <p class="text-xs mt-1">本番環境でのみ広告が表示されます</p>
+  </div>
+)}
+
+<style>
+  .adsense-container {
+    min-height: 90px;
+  }
+</style>

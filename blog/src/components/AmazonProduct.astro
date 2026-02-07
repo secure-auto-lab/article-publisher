@@ -1,0 +1,81 @@
+---
+/**
+ * Amazon Product Card Component
+ * Display Amazon products with affiliate link
+ *
+ * Usage in MDX:
+ * <AmazonProduct
+ *   asin="B0XXXXXXXXX"
+ *   title="商品名"
+ *   image="https://m.media-amazon.com/images/I/xxxxx.jpg"
+ *   price="1,980"
+ * />
+ */
+
+interface Props {
+  asin: string;
+  title: string;
+  image?: string;
+  price?: string;
+  description?: string;
+}
+
+const { asin, title, image, price, description } = Astro.props;
+
+const affiliateTag = import.meta.env.AMAZON_ASSOCIATE_TAG || 'your-tag-22';
+const productUrl = `https://www.amazon.co.jp/dp/${asin}?tag=${affiliateTag}`;
+const defaultImage = `https://images-fe.ssl-images-amazon.com/images/P/${asin}.09.MZZZZZZZ.jpg`;
+---
+
+<div class="amazon-product not-prose my-4">
+  <a href={productUrl} target="_blank" rel="noopener sponsored" class="group block">
+    <div class="relative overflow-hidden rounded-xl bg-white/[0.02] border border-white/10 hover:border-amber-500/30 transition-all">
+      <!-- Hover glow -->
+      <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+      <div class="relative flex gap-4 p-5">
+        <!-- Image -->
+        <div class="flex-shrink-0 w-24 h-24 md:w-28 md:h-28 bg-white rounded-lg p-2 flex items-center justify-center">
+          <img
+            src={image || defaultImage}
+            alt={title}
+            class="max-w-full max-h-full object-contain"
+            loading="lazy"
+          />
+        </div>
+
+        <!-- Content -->
+        <div class="flex-1 min-w-0">
+          <h4 class="text-base font-medium text-white group-hover:text-amber-400 transition-colors line-clamp-2 mb-2">
+            {title}
+          </h4>
+
+          {description && (
+            <p class="text-sm text-dark-400 line-clamp-1 mb-2">{description}</p>
+          )}
+
+          <div class="flex items-center justify-between gap-4">
+            {price && (
+              <p class="text-lg font-bold text-amber-500">&yen;{price}</p>
+            )}
+
+            <div class="inline-flex items-center gap-1.5 text-sm text-amber-500/80 group-hover:text-amber-400 transition-colors">
+              <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"/>
+              </svg>
+              Amazonで見る
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amazon badge -->
+      <div class="absolute top-3 right-3">
+        <div class="px-2 py-0.5 bg-amber-500/20 rounded text-xs text-amber-400 font-medium">
+          Amazon
+        </div>
+      </div>
+    </div>
+  </a>
+  <p class="mt-1.5 text-xs text-dark-600 text-right">* Amazonアソシエイトリンク</p>
+</div>

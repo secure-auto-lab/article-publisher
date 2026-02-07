@@ -1,0 +1,81 @@
+---
+interface Props {
+  title: string;
+  url: string;
+}
+
+const { title, url } = Astro.props;
+const encodedTitle = encodeURIComponent(title);
+const encodedUrl = encodeURIComponent(url);
+---
+
+<div class="flex flex-wrap gap-2">
+  <!-- Twitter/X -->
+  <a
+    href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="group inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-dark-300 hover:text-white rounded-xl transition-all"
+  >
+    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+    </svg>
+    <span class="text-sm">X</span>
+  </a>
+
+  <!-- Bluesky -->
+  <a
+    href={`https://bsky.app/intent/compose?text=${encodedTitle}%20${encodedUrl}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="group inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-blue-500/20 border border-white/10 hover:border-blue-500/30 text-dark-300 hover:text-blue-400 rounded-xl transition-all"
+  >
+    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 600 530">
+      <path d="m135.7 44.3c67 49.7 139.1 150.4 164.3 204.3 25.2-53.9 97.3-154.6 164.3-204.3 48.2-35.8 126.2-63.5 126.2 14.9 0 15.7-9 132-14.3 150.8-18.3 65.3-85.1 82-145.7 71.9 105.8 18.2 132.7 78.2 74.6 138.2-110.5 114.1-158.8-28.6-171.1-65.2-3.1-9.2-4.5-13.5-4.5-9.8 0-3.7-1.4.6-4.5 9.8-12.3 36.6-60.6 179.3-171.1 65.2-58.1-60-31.2-120 74.6-138.2-60.6 10.1-127.4-6.6-145.7-71.9-5.3-18.8-14.3-135.1-14.3-150.8 0-78.4 78-50.7 126.2-14.9z"/>
+    </svg>
+    <span class="text-sm">Bluesky</span>
+  </a>
+
+  <!-- Hatena Bookmark -->
+  <a
+    href={`https://b.hatena.ne.jp/entry/${url}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="group inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-blue-600/20 border border-white/10 hover:border-blue-600/30 text-dark-300 hover:text-blue-400 rounded-xl transition-all"
+  >
+    <span class="font-bold text-sm">B!</span>
+    <span class="text-sm">はてブ</span>
+  </a>
+
+  <!-- Copy Link -->
+  <button
+    class="copy-button group inline-flex items-center gap-2 px-4 py-2.5 bg-white/5 hover:bg-accent-cyan/20 border border-white/10 hover:border-accent-cyan/30 text-dark-300 hover:text-accent-cyan rounded-xl transition-all"
+    data-url={url}
+  >
+    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+    </svg>
+    <span class="text-sm">コピー</span>
+  </button>
+</div>
+
+<script>
+  document.querySelectorAll('.copy-button').forEach(button => {
+    button.addEventListener('click', async () => {
+      const url = button.getAttribute('data-url');
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        const span = button.querySelector('span');
+        if (span) {
+          const original = span.textContent;
+          span.textContent = 'コピー完了!';
+          button.classList.add('!bg-accent-cyan/30', '!border-accent-cyan/50', '!text-accent-cyan');
+          setTimeout(() => {
+            span.textContent = original;
+            button.classList.remove('!bg-accent-cyan/30', '!border-accent-cyan/50', '!text-accent-cyan');
+          }, 2000);
+        }
+      }
+    });
+  });
+</script>

@@ -1,0 +1,239 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Icon from '../components/Icon.astro';
+import { getCollection } from 'astro:content';
+
+const articles = (await getCollection('articles'))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 6);
+
+const categoryMeta: Record<string, { label: string; icon: 'zap' | 'bot' | 'shield' | 'lightbulb' | 'rocket'; gradient: string }> = {
+  automation: { label: '自動化', icon: 'zap', gradient: 'from-amber-500 to-orange-600' },
+  ai: { label: 'AI', icon: 'bot', gradient: 'from-violet-500 to-purple-600' },
+  security: { label: 'セキュリティ', icon: 'shield', gradient: 'from-emerald-500 to-teal-600' },
+  'dev-tips': { label: 'Tips', icon: 'lightbulb', gradient: 'from-cyan-500 to-blue-600' },
+  projects: { label: 'プロジェクト', icon: 'rocket', gradient: 'from-pink-500 to-rose-600' },
+};
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+
+const featured = articles[0];
+const rest = articles.slice(1);
+---
+
+<BaseLayout title="Secure Auto Lab - 自動化×セキュリティの実験場">
+  <!-- Hero Section -->
+  <section class="relative py-20 md:py-32">
+    <!-- Decorative elements -->
+    <div class="absolute top-20 right-10 w-20 h-20 border border-accent-cyan/20 rounded-full animate-float opacity-50"></div>
+    <div class="absolute bottom-20 left-10 w-32 h-32 border border-accent-purple/20 rounded-full animate-float opacity-30" style="animation-delay: -2s;"></div>
+
+    <div class="text-center max-w-4xl mx-auto">
+      <!-- Badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 animate-fade-in">
+        <span class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>
+        <span class="text-sm text-dark-300">新着記事を毎週更新中</span>
+      </div>
+
+      <!-- Main heading -->
+      <h1 class="text-display font-bold mb-6 animate-slide-up">
+        <span class="text-white">Secure</span>
+        <span class="gradient-text"> Auto </span>
+        <span class="text-white">Lab</span>
+      </h1>
+
+      <p class="text-xl md:text-2xl text-dark-400 leading-relaxed mb-10 animate-slide-up" style="animation-delay: 0.1s;">
+        自動化 × セキュリティの<span class="text-white font-medium">実験場</span>。<br class="hidden md:inline" />
+        作ったアプリ・ツールの技術解説と開発ログを発信。
+      </p>
+
+      <!-- CTA buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 animate-slide-up" style="animation-delay: 0.2s;">
+        <a
+          href="/articles"
+          class="group relative inline-flex items-center gap-2 px-8 py-4 overflow-hidden rounded-xl font-medium transition-all"
+        >
+          <div class="absolute inset-0 bg-gradient-to-r from-accent-cyan to-accent-purple"></div>
+          <div class="absolute inset-0 bg-gradient-to-r from-accent-purple to-accent-pink opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <span class="relative text-white">記事を読む</span>
+          <Icon name="arrowRight" class="relative text-white group-hover:translate-x-1 transition-transform" size={20} />
+        </a>
+        <a
+          href="/rss.xml"
+          class="inline-flex items-center gap-2 px-8 py-4 rounded-xl font-medium text-dark-300 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all"
+        >
+          <Icon name="rss" size={20} />
+          RSS購読
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stats -->
+  <section class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
+    {[
+      { value: '50+', label: '記事数', icon: 'fileEdit' as const },
+      { value: '10K+', label: '月間PV', icon: 'eye' as const },
+      { value: '5', label: 'カテゴリー', icon: 'folder' as const },
+      { value: '24h', label: '更新頻度', icon: 'clock' as const },
+    ].map((stat, i) => (
+      <div
+        class="group p-6 rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/10 hover:bg-white/[0.04] transition-all text-center animate-scale-in"
+        style={`animation-delay: ${i * 0.1}s;`}
+      >
+        <div class="w-10 h-10 mx-auto mb-3 rounded-xl bg-gradient-to-br from-accent-cyan/20 to-accent-purple/20 flex items-center justify-center text-accent-cyan">
+          <Icon name={stat.icon} size={20} />
+        </div>
+        <div class="text-2xl md:text-3xl font-bold text-white mb-1">{stat.value}</div>
+        <div class="text-sm text-dark-500">{stat.label}</div>
+      </div>
+    ))}
+  </section>
+
+  <!-- Featured Article (Bento Hero) -->
+  {featured && (
+    <section class="mb-12">
+      <div class="flex items-center justify-between mb-8">
+        <h2 class="text-heading-3 font-bold text-white flex items-center gap-3">
+          <Icon name="sparkles" class="text-accent-cyan" size={24} />
+          最新の記事
+        </h2>
+        <a href="/articles" class="text-sm text-dark-400 hover:text-accent-cyan transition-colors flex items-center gap-1">
+          すべて見る
+          <Icon name="chevronRight" size={16} />
+        </a>
+      </div>
+
+      <a href={`/articles/${featured.slug}`} class="group block">
+        <article class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-white/[0.08] to-white/[0.02] border border-white/10 hover:border-white/20 transition-all p-8 md:p-12">
+          <!-- Background glow -->
+          <div class="absolute top-0 right-0 w-1/2 h-1/2 bg-gradient-to-br from-accent-purple/20 to-transparent rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+          <div class="relative">
+            <div class="flex items-center gap-3 mb-6">
+              <span class={`inline-flex items-center gap-2 px-3 py-1.5 text-sm rounded-full bg-gradient-to-r ${categoryMeta[featured.data.category || 'dev-tips'].gradient} text-white`}>
+                <Icon name={categoryMeta[featured.data.category || 'dev-tips'].icon} size={14} />
+                {categoryMeta[featured.data.category || 'dev-tips'].label}
+              </span>
+              <span class="text-sm text-dark-500">{formatDate(featured.data.pubDate)}</span>
+            </div>
+
+            <h3 class="text-heading-2 font-bold text-white mb-4 group-hover:text-accent-cyan transition-colors">
+              {featured.data.title}
+            </h3>
+
+            <p class="text-lg text-dark-400 mb-6 line-clamp-2 max-w-2xl">
+              {featured.data.description}
+            </p>
+
+            <div class="flex items-center gap-4">
+              {featured.data.tags?.slice(0, 4).map((tag: string) => (
+                <span class="text-sm text-dark-500">#{tag}</span>
+              ))}
+            </div>
+          </div>
+
+          <!-- Arrow indicator -->
+          <div class="absolute bottom-8 right-8 w-12 h-12 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent-cyan/20 transition-all">
+            <Icon name="arrowRight" class="text-dark-400 group-hover:text-accent-cyan group-hover:translate-x-1 transition-all" size={20} />
+          </div>
+        </article>
+      </a>
+    </section>
+  )}
+
+  <!-- Bento Grid Articles -->
+  <section class="mb-20">
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+      {rest.map((article, index) => (
+        <a
+          href={`/articles/${article.slug}`}
+          class={`group block ${index === 0 ? 'md:col-span-2 lg:col-span-1' : ''}`}
+        >
+          <article class="h-full relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/[0.04] transition-all p-6">
+            <!-- Hover glow -->
+            <div class="absolute inset-0 bg-gradient-to-br from-accent-cyan/5 to-accent-purple/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+            <div class="relative">
+              <div class="flex items-center gap-2 mb-4">
+                <span class={`w-8 h-8 rounded-lg bg-gradient-to-br ${categoryMeta[article.data.category || 'dev-tips'].gradient} flex items-center justify-center text-white`}>
+                  <Icon name={categoryMeta[article.data.category || 'dev-tips'].icon} size={14} />
+                </span>
+                <span class="text-xs text-dark-500">{formatDate(article.data.pubDate)}</span>
+              </div>
+
+              <h3 class="text-lg font-semibold text-white mb-3 group-hover:text-accent-cyan transition-colors line-clamp-2">
+                {article.data.title}
+              </h3>
+
+              <p class="text-sm text-dark-400 line-clamp-2 mb-4">
+                {article.data.description}
+              </p>
+
+              <div class="flex flex-wrap gap-2">
+                {article.data.tags?.slice(0, 2).map((tag: string) => (
+                  <span class="text-xs text-dark-500 px-2 py-1 rounded-md bg-white/5">
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </article>
+        </a>
+      ))}
+    </div>
+  </section>
+
+  <!-- Newsletter / CTA Section -->
+  <section class="relative overflow-hidden rounded-3xl">
+    <!-- Background -->
+    <div class="absolute inset-0 bg-gradient-to-br from-accent-cyan/20 via-accent-purple/20 to-accent-pink/20"></div>
+    <div class="absolute inset-0 bg-dark-950/80 backdrop-blur-xl"></div>
+    <div class="absolute inset-0 border border-white/10 rounded-3xl"></div>
+
+    <div class="relative px-8 py-16 md:py-20 text-center">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-accent-cyan to-accent-purple mb-6 text-white">
+        <Icon name="bell" size={32} />
+      </div>
+
+      <h2 class="text-heading-2 font-bold text-white mb-4">
+        最新記事をお届け
+      </h2>
+
+      <p class="text-lg text-dark-300 mb-8 max-w-xl mx-auto">
+        RSSフィードで更新をチェック。<br class="hidden md:inline" />
+        または各種SNSでフォローしてください。
+      </p>
+
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <a
+          href="/rss.xml"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-dark-900 font-medium hover:bg-dark-100 transition-colors"
+        >
+          <Icon name="rss" size={20} />
+          RSS購読
+        </a>
+        <a
+          href="https://twitter.com/"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 border border-white/10 transition-colors"
+        >
+          <Icon name="twitter" size={20} />
+          X (Twitter)
+        </a>
+        <a
+          href="https://note.com/"
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/10 text-white font-medium hover:bg-white/20 border border-white/10 transition-colors"
+        >
+          <Icon name="fileText" size={20} />
+          Note
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

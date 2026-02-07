@@ -1,0 +1,139 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Icon from '../../components/Icon.astro';
+
+export async function getStaticPaths() {
+  const categories = ['automation', 'ai', 'security', 'dev-tips', 'projects'];
+  return categories.map((category) => ({
+    params: { category },
+  }));
+}
+
+const { category } = Astro.params;
+
+const categoryMeta: Record<string, { label: string; icon: 'zap' | 'bot' | 'shield' | 'lightbulb' | 'rocket'; gradient: string; description: string }> = {
+  automation: {
+    label: '自動化',
+    icon: 'zap',
+    gradient: 'from-amber-500 to-orange-600',
+    description: 'SNS投稿・スケジューリング・ワークフロー自動化に関する記事',
+  },
+  ai: {
+    label: 'AI・画像生成',
+    icon: 'bot',
+    gradient: 'from-violet-500 to-purple-600',
+    description: 'AI画像生成・機械学習・ComfyUIに関する記事',
+  },
+  security: {
+    label: 'セキュリティ',
+    icon: 'shield',
+    gradient: 'from-emerald-500 to-teal-600',
+    description: 'セキュリティ・認証・暗号化に関する記事',
+  },
+  'dev-tips': {
+    label: '開発Tips',
+    icon: 'lightbulb',
+    gradient: 'from-cyan-500 to-blue-600',
+    description: '開発効率化・ツール・Tipsに関する記事',
+  },
+  projects: {
+    label: 'プロジェクト',
+    icon: 'rocket',
+    gradient: 'from-pink-500 to-rose-600',
+    description: '作成したアプリケーション・サービスの紹介',
+  },
+};
+
+const allArticles = await getCollection('articles');
+const articles = allArticles
+  .filter((article) => article.data.category === category)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+const meta = categoryMeta[category] || categoryMeta['dev-tips'];
+
+const formatDate = (date: Date) => {
+  return date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'short', day: 'numeric' });
+};
+---
+
+<BaseLayout title={`${meta.label} | Secure Auto Lab`} description={meta.description}>
+  <!-- Back link -->
+  <a
+    href="/"
+    class="inline-flex items-center gap-2 text-sm text-dark-400 hover:text-white mb-8 transition-colors"
+  >
+    <Icon name="arrowLeft" size={16} />
+    トップに戻る
+  </a>
+
+  <!-- Header -->
+  <header class="mb-12">
+    <div class="flex items-center gap-4 mb-6">
+      <div class={`w-16 h-16 rounded-2xl bg-gradient-to-br ${meta.gradient} flex items-center justify-center text-white`}>
+        <Icon name={meta.icon} size={32} />
+      </div>
+      <div>
+        <h1 class="text-heading-2 font-bold text-white">
+          {meta.label}
+        </h1>
+        <p class="text-dark-400">{articles.length} 件の記事</p>
+      </div>
+    </div>
+    <p class="text-lg text-dark-300">{meta.description}</p>
+  </header>
+
+  {articles.length === 0 ? (
+    <div class="text-center py-20 rounded-2xl bg-white/[0.02] border border-white/5">
+      <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-white/5 flex items-center justify-center text-dark-400">
+        <Icon name="fileText" size={32} />
+      </div>
+      <p class="text-dark-400">このカテゴリーにはまだ記事がありません。</p>
+    </div>
+  ) : (
+    <div class="grid gap-4">
+      {articles.map((article, index) => (
+        <a
+          href={`/articles/${article.slug}`}
+          class="group block animate-slide-up"
+          style={`animation-delay: ${index * 0.05}s;`}
+        >
+          <article class="relative overflow-hidden rounded-2xl bg-white/[0.02] border border-white/5 hover:border-white/15 hover:bg-white/[0.04] transition-all p-6">
+            <!-- Hover glow -->
+            <div class={`absolute inset-0 bg-gradient-to-br ${meta.gradient} opacity-0 group-hover:opacity-5 transition-opacity`}></div>
+
+            <div class="relative flex flex-col md:flex-row md:items-center gap-4">
+              <div class="flex-1">
+                <div class="flex flex-wrap items-center gap-2 mb-3">
+                  {article.data.tags?.slice(0, 3).map((tag: string) => (
+                    <span class="text-xs text-dark-500 px-2 py-1 rounded-md bg-white/5">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                <h2 class="text-lg font-semibold text-white group-hover:text-accent-cyan transition-colors mb-2">
+                  {article.data.title}
+                </h2>
+
+                <p class="text-sm text-dark-400 line-clamp-2">
+                  {article.data.description}
+                </p>
+              </div>
+
+              <div class="flex items-center gap-4 md:flex-shrink-0">
+                <time class="text-sm text-dark-500" datetime={article.data.pubDate.toISOString()}>
+                  {formatDate(article.data.pubDate)}
+                </time>
+
+                <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-accent-cyan/20 transition-all">
+                  <Icon name="chevronRight" class="text-dark-400 group-hover:text-accent-cyan transition-colors" size={16} />
+                </div>
+              </div>
+            </div>
+          </article>
+        </a>
+      ))}
+    </div>
+  )}
+</BaseLayout>

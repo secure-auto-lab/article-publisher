@@ -1,0 +1,57 @@
+---
+/**
+ * Affiliate link component
+ * Automatically adds affiliate tags to supported services
+ */
+
+interface Props {
+  url: string;
+  title?: string;
+  class?: string;
+}
+
+const { url, title, class: className = '' } = Astro.props;
+
+// Affiliate tag configurations
+const affiliateTags = {
+  amazon: import.meta.env.AMAZON_ASSOCIATE_TAG || 'tinou-22',
+  rakuten: import.meta.env.RAKUTEN_AFFILIATE_ID || '',
+};
+
+// Convert URL to affiliate URL
+function toAffiliateUrl(originalUrl: string): string {
+  const urlObj = new URL(originalUrl);
+
+  // Amazon
+  if (urlObj.hostname.includes('amazon.co.jp') || urlObj.hostname.includes('amazon.com')) {
+    urlObj.searchParams.set('tag', affiliateTags.amazon);
+    return urlObj.toString();
+  }
+
+  // Rakuten
+  if (urlObj.hostname.includes('rakuten.co.jp') && affiliateTags.rakuten) {
+    // Rakuten affiliate URL structure
+    return `https://hb.afl.rakuten.co.jp/hgc/${affiliateTags.rakuten}/?pc=${encodeURIComponent(originalUrl)}`;
+  }
+
+  // Return original URL for unsupported services
+  return originalUrl;
+}
+
+const affiliateUrl = toAffiliateUrl(url);
+---
+
+<a
+  href={affiliateUrl}
+  target="_blank"
+  rel="noopener sponsored"
+  class={`affiliate-link ${className}`}
+>
+  {title ? title : <slot />}
+</a>
+
+<style>
+  .affiliate-link {
+    @apply text-primary-600 hover:text-primary-800 underline decoration-dotted;
+  }
+</style>
