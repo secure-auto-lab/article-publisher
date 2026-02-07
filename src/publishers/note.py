@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from pathlib import Path
 
@@ -10,7 +11,7 @@ from .base import Publisher, PublishResult
 
 # Playwright is optional - only import when needed
 try:
-    from playwright.async_api import async_playwright, Page, Browser
+    from playwright.async_api import async_playwright, Page, Browser, BrowserContext
     PLAYWRIGHT_AVAILABLE = True
 except ImportError:
     PLAYWRIGHT_AVAILABLE = False
@@ -31,6 +32,7 @@ class NotePublisher(Publisher):
         email: str | None = None,
         password: str | None = None,
         cookies_path: str | None = None,
+        headless: bool = True,
     ):
         if not PLAYWRIGHT_AVAILABLE:
             raise ImportError(
@@ -41,6 +43,7 @@ class NotePublisher(Publisher):
         self.email = email or os.getenv("NOTE_EMAIL")
         self.password = password or os.getenv("NOTE_PASSWORD")
         self.cookies_path = Path(cookies_path or os.getenv("NOTE_COOKIES_PATH", "./.note_cookies.json"))
+        self.headless = headless
 
         if not self.email or not self.password:
             raise ValueError("NOTE_EMAIL and NOTE_PASSWORD are required")
@@ -49,12 +52,12 @@ class NotePublisher(Publisher):
         """Publish article to Note using browser automation."""
         try:
             async with async_playwright() as p:
-                browser = await p.chromium.launch(headless=True)
+                browser = await p.chromium.launch(headless=self.headless)
                 context = await browser.new_context()
 
                 # Load cookies if available
                 if self.cookies_path.exists():
-                    cookies = await self._load_cookies()
+                    cookies = self._load_cookies()
                     if cookies:
                         await context.add_cookies(cookies)
 
@@ -71,7 +74,7 @@ class NotePublisher(Publisher):
 
                 await browser.close()
 
-                if url:
+                if url and "/n/" in url:
                     return PublishResult.success_result(
                         platform=self.platform_name,
                         url=url,
@@ -88,9 +91,43 @@ class NotePublisher(Publisher):
                 error=str(e),
             )
 
+    async def test_login(self) -> bool:
+        """Test login to Note. Returns True if successful."""
+        try:
+            async with async_playwright() as p:
+                browser = await p.chromium.launch(headless=self.headless)
+                context = await browser.new_context()
+
+                # Load cookies if available
+                if self.cookies_path.exists():
+                    cookies = self._load_cookies()
+                    if cookies:
+                        await context.add_cookies(cookies)
+
+                page = await context.new_page()
+
+                # Check if already logged in
+                if await self._is_logged_in(page):
+                    print("Already logged in (from cookies)")
+                    await browser.close()
+                    return True
+
+                # Try to login
+                await self._login(page)
+                await self._save_cookies(context)
+
+                # Verify login
+                success = await self._is_logged_in(page)
+                await browser.close()
+
+                return success
+
+        except Exception as e:
+            print(f"Login test failed: {e}")
+            return False
+
     async def update(self, article: Article, content: str, article_id: str) -> PublishResult:
         """Update existing Note article."""
-        # Note doesn't have a simple update flow, would need to navigate to edit page
         return PublishResult.failure_result(
             platform=self.platform_name,
             error="Update not yet implemented for Note",
@@ -118,11 +155,30 @@ class NotePublisher(Publisher):
         """Check if already logged in to Note."""
         await page.goto("https://note.com/")
         await page.wait_for_load_state("networkidle")
+        await asyncio.sleep(3)
 
-        # Check for user menu or login button
+        # Check for elements that indicate logged-in state
         try:
-            await page.wait_for_selector('[data-testid="user-menu"]', timeout=3000)
-            return True
+            # Look for new post button, profile menu, or dashboard
+            logged_in_selectors = [
+                'a[href*="/notes/new"]',  # New post button
+                'a[href*="/dashboard"]',   # Dashboard link
+                '[class*="Profile"]',      # Profile menu
+                '[class*="avatar"]',       # Avatar image
+            ]
+
+            for selector in logged_in_selectors:
+                element = await page.query_selector(selector)
+                if element:
+                    return True
+
+            # Also check if login button is NOT present
+            login_button = await page.query_selector('a[href="/login"]')
+            if not login_button:
+                # No login button means likely logged in
+                return True
+
+            return False
         except Exception:
             return False
 
@@ -130,81 +186,90 @@ class NotePublisher(Publisher):
         """Login to Note."""
         await page.goto("https://note.com/login")
         await page.wait_for_load_state("networkidle")
-
-        # Fill login form
-        await page.fill('input[name="email"]', self.email)
-        await page.fill('input[name="password"]', self.password)
-
-        # Click login button
-        await page.click('button[type="submit"]')
-
-        # Wait for redirect
-        await page.wait_for_url("https://note.com/**", timeout=30000)
-        await asyncio.sleep(2)  # Extra wait for session to establish
-
-    async def _create_article(self, page: Page, article: Article, content: str) -> str | None:
-        """Create new article on Note."""
-        # Navigate to new article page
-        await page.goto("https://note.com/new")
-        await page.wait_for_load_state("networkidle")
         await asyncio.sleep(2)
 
-        # Enter title
-        title_input = await page.wait_for_selector('[data-testid="title-input"]')
+        # Find email/ID input (first input field)
+        inputs = await page.query_selector_all('input')
+        if len(inputs) >= 2:
+            # Email field
+            await inputs[0].fill(self.email)
+            await asyncio.sleep(0.5)
+
+            # Password field
+            await inputs[1].fill(self.password)
+            await asyncio.sleep(0.5)
+
+        # Find and click login button
+        buttons = await page.query_selector_all('button')
+        for button in buttons:
+            text = await button.text_content()
+            if text and 'ログイン' in text:
+                await button.click()
+                break
+
+        # Wait for redirect
+        await asyncio.sleep(5)
+        await page.wait_for_load_state("networkidle")
+
+    async def _create_article(self, page: Page, article: Article, content: str, publish: bool = False) -> str | None:
+        """Create new article on Note."""
+        # Navigate to new text article page
+        await page.goto("https://note.com/notes/new")
+        await page.wait_for_load_state("networkidle")
+        await asyncio.sleep(3)
+
+        # Enter title - Note uses textarea for title
+        title_input = await page.query_selector('textarea')
         if title_input:
             await title_input.fill(article.title)
 
-        # Enter content - Note uses a rich text editor
-        # We'll try to paste markdown content
-        editor = await page.wait_for_selector('[data-testid="body-editor"]')
-        if editor:
-            await editor.click()
-            await page.keyboard.type(content, delay=10)
-
         await asyncio.sleep(1)
 
-        # Set price if paid article
-        if article.platforms.note.price > 0:
-            await self._set_price(page, article.platforms.note.price)
+        # Enter content - find contenteditable editor
+        editor = await page.query_selector('[contenteditable="true"]')
+        if editor:
+            await editor.click()
+            # Type content line by line for proper formatting
+            lines = content.split('\n')
+            for i, line in enumerate(lines):
+                if line.strip():
+                    await page.keyboard.type(line)
+                if i < len(lines) - 1:
+                    await page.keyboard.press('Enter')
+                await asyncio.sleep(0.05)  # Small delay for stability
 
-        # Save as draft or publish
-        if article.platforms.note.status.value == "draft":
-            save_button = await page.query_selector('[data-testid="save-draft"]')
-            if save_button:
-                await save_button.click()
-        else:
-            publish_button = await page.query_selector('[data-testid="publish"]')
+        await asyncio.sleep(2)
+
+        if publish:
+            # Click "公開に進む" button
+            publish_button = await page.query_selector('button:has-text("公開に進む")')
             if publish_button:
                 await publish_button.click()
+                await asyncio.sleep(3)
+                # Need to handle publish settings dialog here
+                # For now, just return draft URL
+        else:
+            # Save as draft
+            draft_button = await page.query_selector('button:has-text("下書き保存")')
+            if draft_button:
+                await draft_button.click()
+                await asyncio.sleep(3)
 
-        await asyncio.sleep(3)
-
-        # Get the published URL
-        return page.url if "note.com" in page.url else None
+        return page.url
 
     async def _set_price(self, page: Page, price: int) -> None:
         """Set article price for paid content."""
-        # Click price setting button
-        price_button = await page.query_selector('[data-testid="price-setting"]')
-        if price_button:
-            await price_button.click()
-            await asyncio.sleep(1)
+        # This needs to be updated based on Note's actual UI
+        pass
 
-            # Enter price
-            price_input = await page.query_selector('[data-testid="price-input"]')
-            if price_input:
-                await price_input.fill(str(price))
-
-    async def _save_cookies(self, context) -> None:
+    async def _save_cookies(self, context: BrowserContext) -> None:
         """Save cookies for session persistence."""
         cookies = await context.cookies()
-        import json
         self.cookies_path.write_text(json.dumps(cookies))
 
-    async def _load_cookies(self) -> list | None:
+    def _load_cookies(self) -> list | None:
         """Load saved cookies."""
         try:
-            import json
             return json.loads(self.cookies_path.read_text())
         except Exception:
             return None

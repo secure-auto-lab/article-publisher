@@ -37,3 +37,9 @@ npm-debug.log*
 # Playwright
 playwright-report/
 test-results/
+
+# Note cookies (session data)
+.note_cookies.json
+
+# Test screenshots
+*.png
