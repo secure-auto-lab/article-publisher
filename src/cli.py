@@ -400,5 +400,128 @@ Write your article content here.
     console.print(f"[green]Created:[/green] {output_path}")
 
 
+@app.command()
+def announce(
+    article_path: str = typer.Argument(..., help="Path to the article markdown file"),
+    platforms: Optional[str] = typer.Option(
+        None,
+        "--platforms", "-p",
+        help="Comma-separated list of platforms (twitter, bluesky, misskey). If not specified, uses frontmatter config."
+    ),
+    urls: Optional[str] = typer.Option(
+        None,
+        "--urls", "-u",
+        help="Published URLs as JSON (e.g., '{\"blog\": \"https://...\"}')"
+    ),
+):
+    """Announce an already-published article to SNS."""
+    import json as json_module
+
+    async def _announce():
+        parser = ArticleParser()
+
+        try:
+            article = parser.parse_file(article_path)
+        except FileNotFoundError:
+            console.print(f"[red]Error:[/red] Article not found: {article_path}")
+            raise typer.Exit(1)
+
+        console.print(f"[bold]Article:[/bold] {article.title}")
+
+        # Parse URLs
+        published_urls = {}
+        if urls:
+            try:
+                published_urls = json_module.loads(urls)
+            except json_module.JSONDecodeError as e:
+                console.print(f"[red]Error parsing URLs JSON:[/red] {e}")
+                raise typer.Exit(1)
+
+        # Determine target platforms
+        if platforms:
+            target_platforms = [p.strip() for p in platforms.split(",")]
+            # Override article announcement platforms
+            article.announcement.platforms = target_platforms
+
+        console.print(f"[bold]Announcing to:[/bold] {', '.join(article.announcement.platforms)}")
+
+        service = AnnouncementService()
+        results = await service.announce_all(article, published_urls)
+
+        for result in results:
+            if result.success:
+                console.print(f"  [green]✓[/green] {result.platform}: {result.url}")
+            else:
+                console.print(f"  [red]✗[/red] {result.platform}: {result.error}")
+
+    asyncio.run(_announce())
+
+
+@app.command(name="note-login")
+def note_login(
+    headless: bool = typer.Option(
+        False,
+        "--headless",
+        help="Run browser in headless mode"
+    ),
+):
+    """Test login to Note using Playwright."""
+    async def _test():
+        try:
+            from .publishers.note import NotePublisher
+
+            console.print("[bold]Testing Note login...[/bold]")
+
+            publisher = NotePublisher(headless=headless)
+            success = await publisher.test_login()
+
+            if success:
+                console.print("[green]✓ Login successful![/green]")
+            else:
+                console.print("[red]✗ Login failed[/red]")
+                raise typer.Exit(1)
+
+        except ImportError as e:
+            console.print(f"[red]Error:[/red] {e}")
+            raise typer.Exit(1)
+        except ValueError as e:
+            console.print(f"[red]Configuration error:[/red] {e}")
+            raise typer.Exit(1)
+
+    asyncio.run(_test())
+
+
+@app.command(name="test-announce")
+def test_announce(
+    platform: str = typer.Argument(..., help="Platform to test (twitter, bluesky, misskey)"),
+    message: str = typer.Option(
+        "テスト投稿です。article-publisherからの自動投稿テスト。",
+        "--message", "-m",
+        help="Test message to post"
+    ),
+):
+    """Test announcement to a single platform."""
+    async def _test():
+        service = AnnouncementService()
+
+        if platform not in service._announcers:
+            console.print(f"[red]Error:[/red] Announcer not available for {platform}")
+            console.print(f"[dim]Available: {', '.join(service._announcers.keys())}[/dim]")
+            raise typer.Exit(1)
+
+        console.print(f"[bold]Testing {platform}...[/bold]")
+        console.print(f"[dim]Message: {message}[/dim]")
+
+        result = await service._announcers[platform].post(message)
+
+        if result.success:
+            console.print(f"[green]✓ Success![/green] {result.url}")
+        else:
+            console.print(f"[red]✗ Failed:[/red] {result.error}")
+            raise typer.Exit(1)
+
+    asyncio.run(_test())
+
+
 if __name__ == "__main__":
     app()
