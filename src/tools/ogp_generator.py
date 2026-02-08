@@ -79,19 +79,22 @@ def _build_html(
     t = THEMES.get(theme_name, THEMES["default"])
     escaped_title = html.escape(title)
 
-    # Adjust font size based on title length
-    if len(title) <= 20:
-        font_size = "52px"
+    # タイトル文字数に応じてフォントサイズを自動調整
+    if len(title) <= 15:
+        font_size = "72px"
+        line_height = "1.25"
+    elif len(title) <= 25:
+        font_size = "62px"
         line_height = "1.3"
     elif len(title) <= 40:
-        font_size = "44px"
+        font_size = "52px"
         line_height = "1.35"
-    elif len(title) <= 60:
-        font_size = "36px"
+    elif len(title) <= 55:
+        font_size = "44px"
         line_height = "1.4"
     else:
-        font_size = "30px"
-        line_height = "1.45"
+        font_size = "38px"
+        line_height = "1.4"
 
     tags_html = "".join(
         f'<span class="tag">{html.escape(tag)}</span>' for tag in tags[:5]
@@ -120,8 +123,7 @@ body {{
     position: relative;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    padding: 60px 80px;
+    padding: 0 80px;
 }}
 
 /* Geometric pattern overlay */
@@ -142,13 +144,25 @@ body {{
     pointer-events: none;
 }}
 
-/* Accent line */
+/* タイトル領域：カード中央に配置 */
+.title-area {{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+    padding-top: 20px;
+}}
+
+/* アクセントライン */
 .accent-line {{
     width: 80px;
     height: 4px;
     background: {t['accent']};
     border-radius: 2px;
-    margin-bottom: 28px;
+    margin-bottom: 24px;
 }}
 
 .title {{
@@ -157,29 +171,34 @@ body {{
     color: {t['title_color']};
     line-height: {line_height};
     letter-spacing: -0.02em;
-    margin-bottom: 32px;
+    text-align: center;
+    text-shadow: 0 2px 16px rgba(0,0,0,0.4);
+    max-width: 1040px;
+}}
+
+/* 下部エリア：タグ+フッター */
+.bottom-area {{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     position: relative;
     z-index: 1;
-    /* Text shadow for depth */
-    text-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    padding-bottom: 32px;
 }}
 
 .tags {{
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 40px;
-    position: relative;
-    z-index: 1;
+    gap: 8px;
 }}
 
 .tag {{
     background: {t['tag_bg']};
     border: 1px solid {t['tag_border']};
     color: {t['tag_color']};
-    padding: 6px 16px;
+    padding: 4px 14px;
     border-radius: 20px;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.02em;
 }}
@@ -187,10 +206,7 @@ body {{
 .footer {{
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    position: relative;
-    z-index: 1;
-    margin-top: auto;
+    gap: 16px;
 }}
 
 .author {{
@@ -200,14 +216,14 @@ body {{
 }}
 
 .author-icon {{
-    width: 40px;
-    height: 40px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     background: linear-gradient(135deg, {t['accent']}, {t['accent']}88);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 13px;
     font-weight: 800;
     color: {t['bg_from']};
 }}
@@ -216,14 +232,6 @@ body {{
     color: {t['sub_color']};
     font-size: 16px;
     font-weight: 600;
-}}
-
-.brand {{
-    color: {t['sub_color']};
-    font-size: 14px;
-    font-weight: 600;
-    opacity: 0.7;
-    letter-spacing: 0.05em;
 }}
 
 /* Corner decoration */
@@ -252,15 +260,18 @@ body {{
 <div class="card">
     <div class="corner-tl"></div>
     <div class="corner-br"></div>
-    <div class="accent-line"></div>
-    <div class="title">{escaped_title}</div>
-    <div class="tags">{tags_html}</div>
-    <div class="footer">
-        <div class="author">
-            <div class="author-icon">S</div>
-            <div class="author-name">@{html.escape(author)}</div>
+    <div class="title-area">
+        <div class="accent-line"></div>
+        <div class="title">{escaped_title}</div>
+    </div>
+    <div class="bottom-area">
+        <div class="tags">{tags_html}</div>
+        <div class="footer">
+            <div class="author">
+                <div class="author-icon">S</div>
+                <div class="author-name">@{html.escape(author)}</div>
+            </div>
         </div>
-        <div class="brand">secure-auto-lab.com</div>
     </div>
 </div>
 </body>

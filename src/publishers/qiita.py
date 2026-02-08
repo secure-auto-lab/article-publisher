@@ -11,10 +11,11 @@ from .base import Publisher, PublishResult
 
 
 class QiitaPublisher(Publisher):
-    """Publisher for Qiita using REST API v2."""
+    """Qiita REST API v2を使用したパブリッシャー。"""
 
     platform_name = "qiita"
     BASE_URL = "https://qiita.com/api/v2"
+    BLOG_BASE_URL = "https://blog.secure-auto-lab.com/articles"
 
     def __init__(self, access_token: str | None = None):
         self.access_token = access_token or os.getenv("QIITA_ACCESS_TOKEN")
@@ -133,13 +134,15 @@ class QiitaPublisher(Publisher):
         return errors
 
     def _build_payload(self, article: Article, content: str) -> dict[str, Any]:
-        """Build Qiita API payload."""
+        """Qiita APIペイロードを構築する。canonical_urlでブログを正規URLに指定。"""
+        canonical_url = f"{self.BLOG_BASE_URL}/{article.slug}"
         return {
             "title": article.title,
             "body": content,
             "tags": [{"name": tag} for tag in article.tags[:5]],
             "private": article.platforms.qiita.private,
-            "tweet": False,  # We handle SNS announcement separately
+            "tweet": False,  # SNS告知は別途実行
+            "canonical_url": canonical_url,
         }
 
     def _parse_error(self, response: httpx.Response) -> str:

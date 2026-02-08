@@ -1,17 +1,101 @@
-# Article Publisher - Claude 作業指示
+# Article Publisher
 
-## プロジェクト概要
+## プロジェクトの目的
 
-複数プラットフォーム（Note・Zenn・Qiita・自作ブログ）への技術記事自動投稿システム。
+1つのMarkdown記事から **Note・Zenn・Qiita・自作ブログ** に自動投稿し、**SNS告知**（X・Bluesky・Misskey）で収益化を支援するCLIツール。
 
-## 記事を書くときのルール
+- **Note**: 内部API（httpx）で下書き作成。有料記事販売に対応
+- **Zenn**: GitHubリポジトリ同期で自動デプロイ
+- **Qiita**: REST API v2。収益化不可のため要約+ブログ誘導リンクのみ
+- **Blog**: Astro + Cloudflare Pages。AdSense / Amazon Associate で収益化
+- **OGP画像**: HTML+Playwrightで自動生成（4テーマ: default/purple/green/orange）
 
-### 必ず参照するファイル
+## 必須ルール
 
-記事を作成・編集する際は、以下のテンプレートとガイドを**必ず参照**すること：
+- **ソースコードのコメントは全て日本語で記載すること**
+- **回答・解析情報も全て日本語で出力すること**
+- Python 3.11+、ruff でフォーマット（line-length=100）
+- Windows環境（cp932）を考慮する。Richのスピナーは `spinner="line"` を使用
 
-1. **記事テンプレート**: `articles/templates/viral-article-template.md`
-2. **執筆ガイド**: `articles/templates/WRITING_GUIDE.md`
+## ディレクトリ構成
+
+```
+article-publisher/
+├── articles/
+│   ├── drafts/              # 下書き（ここで執筆）
+│   ├── published/           # 投稿済み
+│   ├── images/              # 記事用画像・OGP画像
+│   └── templates/           # テンプレート・執筆ガイド
+├── src/
+│   ├── cli.py               # CLIエントリポイント（typer）
+│   ├── config.py            # カテゴリ一元管理（単一ソース）
+│   ├── transformer/         # 記事解析・プラットフォーム別変換
+│   │   ├── article.py       # Articleデータクラス
+│   │   └── converter.py     # プラットフォーム別コンバーター
+│   ├── publishers/          # プラットフォーム別投稿
+│   │   ├── note.py          # Note内部API（httpx）
+│   │   ├── zenn.py          # Zenn（Git push）
+│   │   ├── qiita.py         # Qiita REST API
+│   │   └── blog.py          # Blog（ファイルコピー）
+│   ├── announcer/           # SNS告知（X・Bluesky・Misskey）
+│   └── tools/
+│       └── ogp_generator.py # OGP画像生成（Playwright screenshot）
+├── blog/                    # Astroブログ（Cloudflare Pages）
+│   └── src/content/
+│       ├── config.ts        # カテゴリ定義（src/config.pyから同期）
+│       └── articles/        # ブログ記事（BlogConverterが配置）
+└── zenn-content/            # Zenn用リポジトリ（自動git push）
+```
+
+## CLIコマンド
+
+```bash
+# 新規記事作成
+python -m src.cli init --title "記事タイトル" --slug "article-slug"
+
+# 検証
+python -m src.cli validate articles/drafts/article-slug.md
+
+# 全プラットフォームに投稿（OGP自動生成）
+python -m src.cli publish articles/drafts/article-slug.md
+
+# 特定プラットフォームのみ
+python -m src.cli publish articles/drafts/article-slug.md -p note,zenn
+
+# OGP画像のみ生成
+python -m src.cli generate-ogp articles/drafts/article-slug.md --theme green
+
+# カテゴリ一覧
+python -m src.config
+
+# カテゴリをblog config.tsに同期
+python -m src.config sync
+
+# スクリーンショット取得
+python -m src.cli screenshot http://localhost:3000 -o articles/images/app.png
+```
+
+## カテゴリ管理
+
+`src/config.py` が単一ソース。カテゴリ追加時は:
+1. `src/config.py` の `BLOG_CATEGORIES` に追加
+2. `python -m src.config sync` で `blog/src/content/config.ts` に自動反映
+
+エイリアス対応あり（例: `tech` → `dev-tips`、`frontend` → `web`）。
+
+## Note内部API
+
+- ドラフト作成: `POST /api/v1/text_notes`
+- 保存: `POST /api/v1/text_notes/draft_save?id={id}`
+- アイキャッチ: `POST /api/v1/image_upload/note_eyecatch`（multipart: file, note_id, width=1920, height=1005）
+- 必須ヘッダー: `X-Requested-With: XMLHttpRequest`
+- HTML形式: `<pre><code>` でコードブロック、`<strong>` のみインライン。`<code>` / `<em>` / `<table>` / LaTeX は非対応
+
+## 記事の執筆ルール
+
+記事作成時は必ず以下を参照:
+- `articles/templates/viral-article-template.md` - テンプレート
+- `articles/templates/WRITING_GUIDE.md` - 執筆ガイド
 
 ### 売れる記事の7つの法則
 
@@ -27,7 +111,6 @@
 
 ### 記事の必須構成
 
-```
 1. フック（最初の3行）→ 成果を数字で示して引き込む
 2. ベネフィット → この記事で得られることを箇条書き
 3. 共感 → 読者の悩みを言語化
@@ -37,111 +120,28 @@
 7. How → 具体的な実装（コード・画像）
 8. まとめ → 今日からできるアクション
 9. おわりに → 感情に訴えるクロージング
-```
 
-## スクリーンショットの撮り方
+## スクリーンショット
 
-記事に画像を埋め込むときは、**必ず以下のツールを使用**すること。
-**出力先は `articles/images/` に統一**する。
-
-### 基本コマンド
+画像の出力先は `articles/images/` に統一する。
 
 ```bash
-cd C:\Users\tinou\Projects\article-publisher
-
 # URLからスクリーンショット
-python -m publisher screenshot http://localhost:3000 -o articles/images/app.png
+python -m src.cli screenshot http://localhost:3000 -o articles/images/app.png
 
 # フルページキャプチャ
-python -m publisher screenshot http://localhost:3000 --full-page -o articles/images/full.png
+python -m src.cli screenshot http://localhost:3000 --full-page -o articles/images/full.png
 
-# 特定要素のみキャプチャ
-python -m publisher screenshot http://localhost:3000 --selector ".dashboard" -o articles/images/dashboard.png
-
-# モバイルサイズ
-python -m publisher screenshot http://localhost:3000 --width 375 --height 812 -o articles/images/mobile.png
+# 特定要素のみ
+python -m src.cli screenshot http://localhost:3000 --selector ".dashboard" -o articles/images/dashboard.png
 ```
 
-### TSX/JSXコンポーネントの画像化
+## デプロイ
 
-```bash
-# TSXコンポーネントを画像化
-python -m publisher screenshot ./components/Card.tsx -o articles/images/card.png
-
-# propsを指定してレンダリング
-python -m publisher screenshot ./components/Card.tsx \
-    --props '{"title": "Hello", "description": "World"}' \
-    -o articles/images/card-with-props.png
-```
-
-### HTMLファイルの画像化
-
-```bash
-python -m publisher screenshot ./page.html -o articles/images/page.png
-```
-
-### 画像の保存先（統一ルール）
-
-| 種類 | パス |
-|------|------|
-| 記事用画像 | `articles/images/` |
-| 下書き | `articles/drafts/` |
-| 投稿済み | `articles/published/` |
-
-### 記事内での埋め込み
-
-```markdown
-![ダッシュボード画面](./images/dashboard.png)
-```
-
-## CLIコマンド一覧
-
-```bash
-# 新規記事作成（テンプレートから）
-python -m publisher init --title "記事タイトル" --slug "article-slug"
-
-# 記事の検証
-python -m publisher validate articles/drafts/article-slug.md
-
-# プレビュー（ドライラン）
-python -m publisher publish articles/drafts/article-slug.md --dry-run
-
-# 投稿
-python -m publisher publish articles/drafts/article-slug.md
-
-# 特定プラットフォームのみ
-python -m publisher publish articles/drafts/article-slug.md --platforms qiita,zenn
-
-# プラットフォーム別に変換のみ
-python -m publisher convert articles/drafts/article-slug.md zenn -o output.md
-```
-
-## ディレクトリ構造
-
-```
-article-publisher/
-├── articles/
-│   ├── drafts/           # 下書き（ここで執筆）
-│   ├── published/        # 投稿済み
-│   ├── images/           # 記事用画像（スクリーンショット保存先）
-│   └── templates/        # テンプレート・ガイド
-├── src/
-│   ├── transformer/      # 記事変換
-│   ├── publishers/       # 投稿機能
-│   ├── announcer/        # SNS告知
-│   └── tools/            # スクリーンショット等
-├── blog/                 # Astroブログ
-└── zenn-content/         # Zenn連携
-```
-
-## 記事作成ワークフロー
-
-1. `python -m publisher init` で新規記事作成
-2. `articles/templates/` のテンプレートを参考に執筆
-3. スクリーンショットは `python -m publisher screenshot` で取得
-4. `python -m publisher validate` で検証
-5. `python -m publisher publish --dry-run` でプレビュー
-6. `python -m publisher publish` で投稿
+- **Blog**: publishコマンド後、`blog/` で手動 `git push` → Cloudflare Pages 自動デプロイ
+- **Zenn**: publishコマンドが自動 `git push` → Zenn 自動デプロイ
+- **Note**: publishコマンドが内部APIで下書き保存（手動で公開）
+- **Qiita**: publishコマンドがREST APIで投稿
 
 ## 注意事項
 
