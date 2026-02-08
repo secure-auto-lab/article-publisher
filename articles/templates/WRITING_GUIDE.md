@@ -194,6 +194,160 @@
 
 ---
 
+## 🚀 投稿方法
+
+### 対応プラットフォーム
+
+| プラットフォーム | 方式 | アカウント | 収益化 |
+|-----------------|------|-----------|--------|
+| **Blog** | Astro + Cloudflare Pages | blog.secure-auto-lab.com | Amazon Associate / AdSense |
+| **Note** | 内部API (httpx) | engineer@secure-auto-lab.com | 有料記事販売 |
+| **Zenn** | GitHub連携（自動デプロイ） | secure_auto_lab | バッジ（投げ銭） |
+| **Qiita** | REST API v2 | secure-auto-lab | 集客（ブログ誘導） |
+| **X** | Twitter API v2 (Free Tier) | @secure_auto_lab | 集客（直接収益なし） |
+| **Bluesky** | AT Protocol | @secure-auto-lab | 集客 |
+| **Misskey** | REST API | @secure_auto_lab | 集客 |
+
+### CLIコマンド
+
+```bash
+cd C:\Users\tinou\Projects\article-publisher
+
+# 1. 新規記事作成
+python -m src.cli init --title "記事タイトル" --slug "article-slug"
+
+# 2. 検証
+python -m src.cli validate articles/drafts/article-slug.md
+
+# 3. プレビュー（dry-run）
+python -m src.cli publish articles/drafts/article-slug.md --dry-run
+
+# 4. 全プラットフォームに投稿（Note/Zenn投稿時はOGP画像を自動生成）
+python -m src.cli publish articles/drafts/article-slug.md
+
+# 5. OGPテーマを指定して投稿
+python -m src.cli publish articles/drafts/article-slug.md --ogp-theme purple
+
+# 6. 特定プラットフォームのみ
+python -m src.cli publish articles/drafts/article-slug.md -p note,zenn
+
+# 7. OGP画像のみ生成
+python -m src.cli generate-ogp articles/drafts/article-slug.md --theme green
+
+# 8. SNS告知のみ（既存記事）
+python -m src.cli announce articles/drafts/article-slug.md --urls '{"blog": "https://blog.secure-auto-lab.com/..."}'
+
+# 9. X投稿テスト
+python -m src.cli test-announce twitter -m "テスト投稿"
+
+# 10. Noteログインテスト
+python -m src.cli note-login
+
+# 11. スクリーンショット取得
+python -m src.cli screenshot http://localhost:3000 -o articles/images/app.png
+```
+
+### 投稿フロー
+
+```
+記事執筆（Markdown）
+  ↓
+python -m src.cli validate → 検証
+  ↓
+python -m src.cli publish --dry-run → プレビュー
+  ↓
+python -m src.cli publish → 一括投稿
+  │
+  ├── OGP画像自動生成 (1200x630, 4テーマ: default/purple/green/orange)
+  │     → articles/images/{slug}-ogp.png
+  │
+  ├── Blog: 記事 → blog/src/content/articles/
+  │         OGP画像 → blog/public/images/{slug}-ogp.png
+  │         ※ blog/ で git push → Cloudflare Pages デプロイ
+  │
+  ├── Note: 内部API → 下書き保存
+  │         OGP画像はブログURL参照 (<figure><img>)
+  │
+  ├── Zenn: 記事 → zenn-content/articles/
+  │         OGP画像 → zenn-content/images/{slug}-ogp.png
+  │         → 自動 git push → Zenn デプロイ
+  │
+  ├── Qiita: REST API → 要約+ブログ誘導リンク
+  │
+  └── SNS告知: X → Bluesky → Misskey (時間差)
+```
+
+### OGP画像の自動添付
+
+Note・Zenn投稿時は **OGP画像が自動生成** され、各プラットフォームに配信されます。
+
+| プラットフォーム | OGP画像の扱い |
+|-----------------|--------------|
+| **Blog** | `blog/public/images/{slug}-ogp.png` にコピー（公開URL提供元） |
+| **Note** | ブログURL参照: `<figure><img src="https://blog.secure-auto-lab.com/images/{slug}-ogp.png">` |
+| **Zenn** | `zenn-content/images/{slug}-ogp.png` にコピー → 記事先頭に `![OGP](/images/{slug}-ogp.png)` |
+| **Qiita** | 要約記事のため不要 |
+
+OGPテーマ: `default`(ブルー), `purple`, `green`, `orange`
+
+### Blogのデプロイ
+
+```bash
+cd C:\Users\tinou\Projects\article-publisher\blog
+
+# publishコマンドで記事・OGP画像が配置された後
+git add src/content/articles/{slug}.md public/images/{slug}-ogp.png
+git commit -m "Add article: タイトル"
+git push origin main
+# → Cloudflare Pages が自動デプロイ
+```
+
+### プラットフォーム別の注意事項
+
+**Blog**
+- Astroの `blog/src/content/articles/` に記事を配置
+- OGP画像は `blog/public/images/` に自動コピー
+- Amazon Associateリンクは `{{affiliate:ASIN}}` 記法で埋め込み
+
+**Note**
+- 内部API方式（httpx直接呼び出し、Playwrightはログインのみ）
+- 有料記事は `price: 500` で設定（500-1000円が売れ筋）
+- `:::note-only` で有料部分を囲む
+- 初回は `python -m src.cli note-login` でログインテスト
+- OGP画像はブログの公開URLから参照
+
+**Zenn**
+- slugは12-50文字（英数字・ハイフン・アンダースコア）
+- topicsは1-5個
+- リポジトリ: `secure-auto-lab/zenn-content`
+- publishコマンドが自動でgit pushしてデプロイ
+- OGP画像は `zenn-content/images/` に自動コピー
+
+**Qiita**
+- 収益化不可のため、要約+ブログ誘導のみ投稿
+- REST API v2使用、アクセストークンは `.env` に設定
+
+**X (@secure_auto_lab)**
+- Free Tier: 投稿のみ（月間制限あり）
+- 280文字制限
+- 共有アプリ（nami-auto-posts）のOAuth認証
+- トークン再発行: `python x_auth.py`
+
+### Zenn単独投稿（Git直接）
+
+```bash
+cd C:\Users\tinou\Projects\zenn-content
+
+# 記事ファイルを articles/ に作成（Zennフォーマット）
+# OGP画像がある場合は images/ にも配置
+git add articles/slug-name.md images/slug-name-ogp.png
+git commit -m "Add article: タイトル"
+git push origin main
+# → Zennが自動デプロイ（1-2分）
+```
+
+---
+
 ## 🔗 Sources
 
 - [note有料記事での稼ぎ方](https://www.sungrove.co.jp/note-paid-article/)

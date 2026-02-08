@@ -93,28 +93,37 @@ published: {published}
 
 
 class QiitaConverter(PlatformConverter):
-    """Convert article to Qiita format."""
+    """Convert article to Qiita format.
+
+    Qiita is non-monetizable, so content is a summary with a link
+    to the full article on the blog (similar to SNS announcements).
+    """
+
+    BLOG_BASE_URL = "https://blog.secure-auto-lab.com/articles"
 
     def convert(self, article: Article) -> str:
-        content = self._strip_platform_blocks(article.content, "qiita")
+        blog_url = f"{self.BLOG_BASE_URL}/{article.slug}"
+        tags_str = " / ".join(article.tags[:5])
 
-        # Qiita-specific transformations
-        content = self._convert_callouts(content)
-        content = self._convert_mermaid(content)
+        return f"""# {article.title}
 
-        return content
+{article.description}
 
-    def _convert_callouts(self, content: str) -> str:
-        """Convert callouts to Qiita note format."""
-        # :::message → :::note info
-        content = re.sub(r":::message", ":::note info", content)
-        return content
+## この記事について
 
-    def _convert_mermaid(self, content: str) -> str:
-        """Qiita doesn't support Mermaid, convert to image placeholders."""
-        pattern = r"```mermaid\n(.*?)\n```"
-        replacement = "[Mermaid図: 画像に変換が必要です]"
-        return re.sub(pattern, replacement, content, flags=re.DOTALL)
+本記事の全文は以下のブログで公開しています。
+
+**[>> 全文を読む: {article.title}]({blog_url})**
+
+### タグ
+
+{tags_str}
+
+---
+
+> この記事は [secure-auto-lab.com]({blog_url}) からの要約です。
+> 全文・ソースコード・詳細解説はブログ本文をご覧ください。
+"""
 
 
 class BlogConverter(PlatformConverter):

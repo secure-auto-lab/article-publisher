@@ -34,48 +34,48 @@ class MessageGenerator:
         else:
             return self._generate_default(article, urls)
 
+    def _get_primary_url(self, urls: dict[str, str]) -> str:
+        """Get the primary URL for SNS (blog only)."""
+        return urls.get("blog") or urls.get("zenn") or urls.get("qiita") or ""
+
     def _generate_twitter(self, article: Article, urls: dict[str, str]) -> str:
         """Generate Twitter-optimized message (280 char limit)."""
-        # Priority: blog > note > zenn > qiita
-        url = urls.get("blog") or urls.get("note") or urls.get("zenn") or urls.get("qiita") or ""
+        url = self._get_primary_url(urls)
+        hashtags = " ".join(f"#{tag}" for tag in article.tags[:3])
 
-        # Short hashtags
-        hashtags = " ".join(f"#{tag}" for tag in article.tags[:2])
+        msg = f"{article.title}\n\n{article.description[:120]}"
 
-        # Build message with length limit
-        base = f"新記事公開\n\n{article.title}\n\n{url}"
+        if url:
+            msg += f"\n\n{url}"
 
-        if len(base) + len(hashtags) + 2 <= self.TWITTER_MAX_LENGTH:
-            return f"{base}\n\n{hashtags}"
+        if len(msg) + len(hashtags) + 2 <= self.TWITTER_MAX_LENGTH:
+            msg += f"\n\n{hashtags}"
 
-        return base[:self.TWITTER_MAX_LENGTH]
+        return msg[:self.TWITTER_MAX_LENGTH]
 
     def _generate_bluesky(self, article: Article, urls: dict[str, str]) -> str:
         """Generate Bluesky message."""
-        url = urls.get("blog") or urls.get("note") or urls.get("zenn") or urls.get("qiita") or ""
+        url = self._get_primary_url(urls)
 
-        return f"""新記事を公開しました
+        msg = f"{article.title}\n\n{article.description[:150]}"
 
-{article.title}
+        if url:
+            msg += f"\n\n{url}"
 
-{article.description[:100]}{"..." if len(article.description) > 100 else ""}
-
-{url}"""
+        return msg[:self.BLUESKY_MAX_LENGTH]
 
     def _generate_misskey(self, article: Article, urls: dict[str, str]) -> str:
         """Generate Misskey message (supports Markdown)."""
-        url = urls.get("blog") or urls.get("note") or urls.get("zenn") or urls.get("qiita") or ""
-        hashtags = " ".join(f"#{tag}" for tag in article.tags)
+        url = self._get_primary_url(urls)
+        hashtags = " ".join(f"#{tag}" for tag in article.tags[:5])
 
-        return f"""**新記事を公開しました**
+        msg = f"**{article.title}**\n\n{article.description}"
 
-**{article.title}**
+        if url:
+            msg += f"\n\n{url}"
 
-{article.description}
-
-{url}
-
-{hashtags}"""
+        msg += f"\n\n{hashtags}"
+        return msg[:self.MISSKEY_MAX_LENGTH]
 
     def _generate_default(self, article: Article, urls: dict[str, str]) -> str:
         """Generate default message."""

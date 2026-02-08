@@ -24,7 +24,7 @@ app = typer.Typer(
     help="Multi-platform article publishing system",
     add_completion=False,
 )
-console = Console()
+console = Console(force_terminal=True)
 
 
 @app.command()
@@ -45,9 +45,19 @@ def publish(
         "--no-announce",
         help="Skip SNS announcements"
     ),
+    ogp: bool = typer.Option(
+        False,
+        "--ogp",
+        help="Generate OGP/title image before publishing"
+    ),
+    ogp_theme: str = typer.Option(
+        "default",
+        "--ogp-theme",
+        help="OGP image color theme: default, purple, green, orange"
+    ),
 ):
     """Publish an article to configured platforms."""
-    asyncio.run(_publish_async(article_path, platforms, dry_run, no_announce))
+    asyncio.run(_publish_async(article_path, platforms, dry_run, no_announce, ogp, ogp_theme))
 
 
 async def _publish_async(
@@ -55,12 +65,14 @@ async def _publish_async(
     platforms: Optional[str],
     dry_run: bool,
     no_announce: bool,
+    ogp: bool = False,
+    ogp_theme: str = "default",
 ):
     """Async implementation of publish command."""
     parser = ArticleParser()
 
     # Parse article
-    with console.status("Parsing article..."):
+    with console.status(spinner="line", status="Parsing article..."):
         try:
             article = parser.parse_file(article_path)
         except FileNotFoundError:
@@ -82,6 +94,29 @@ async def _publish_async(
 
     console.print(f"\n[bold]Target platforms:[/bold] {', '.join(target_platforms)}")
 
+    # Generate OGP image (auto for note/zenn, or when --ogp flag is set)
+    ogp_path = None
+    ogp_file = f"articles/images/{article.slug}-ogp.png"
+    needs_ogp = ogp or any(p in target_platforms for p in ("note", "zenn"))
+
+    if needs_ogp:
+        from pathlib import Path as _Path
+        if not _Path(ogp_file).exists() or ogp:
+            from .tools.ogp_generator import OgpGenerator
+            gen = OgpGenerator()
+            console.print(f"\n[bold]Generating OGP image ({ogp_theme})...[/bold]")
+            await gen.generate(
+                title=article.title,
+                tags=article.tags,
+                output=ogp_file,
+                author=article.author,
+                theme=ogp_theme,
+            )
+            console.print(f"  [green]Saved:[/green] {ogp_file}")
+        else:
+            console.print(f"\n[dim]OGP image exists:[/dim] {ogp_file}")
+        ogp_path = ogp_file
+
     if dry_run:
         console.print("\n[yellow]Dry run mode - no changes will be made[/yellow]")
         _show_preview(article, target_platforms)
@@ -91,7 +126,7 @@ async def _publish_async(
     published_urls = {}
 
     with Progress(
-        SpinnerColumn(),
+        SpinnerColumn(spinner_name="line"),
         TextColumn("[progress.description]{task.description}"),
         console=console,
     ) as progress:
@@ -104,7 +139,7 @@ async def _publish_async(
                 content = converter.convert(article)
 
                 # Publish
-                result = await _publish_to_platform(platform, article, content)
+                result = await _publish_to_platform(platform, article, content, ogp_path)
 
                 if result.success:
                     published_urls[platform] = result.url
@@ -126,12 +161,14 @@ async def _publish_async(
 
         for result in results:
             if result.success:
-                console.print(f"  [green]✓[/green] {result.platform}: {result.url}")
+                console.print(f"  [green]OK[/green] {result.platform}: {result.url}")
             else:
-                console.print(f"  [red]✗[/red] {result.platform}: {result.error}")
+                console.print(f"  [red]NG[/red] {result.platform}: {result.error}")
 
 
-async def _publish_to_platform(platform: str, article, content: str):
+async def _publish_to_platform(
+    platform: str, article, content: str, ogp_path: str | None = None
+):
     """Publish to a specific platform."""
     from .publishers.base import PublishResult
 
@@ -145,7 +182,7 @@ async def _publish_to_platform(platform: str, article, content: str):
     elif platform == "zenn":
         try:
             publisher = ZennPublisher()
-            return await publisher.publish(article, content)
+            return await publisher.publish(article, content, ogp_path=ogp_path)
         except Exception as e:
             return PublishResult.failure_result("zenn", str(e))
 
@@ -153,13 +190,17 @@ async def _publish_to_platform(platform: str, article, content: str):
         try:
             from .publishers.note import NotePublisher
             publisher = NotePublisher()
-            return await publisher.publish(article, content)
+            return await publisher.publish(article, content, ogp_path=ogp_path)
         except (ImportError, ValueError) as e:
             return PublishResult.failure_result("note", str(e))
 
     elif platform == "blog":
-        # Blog is handled via git push (similar to Zenn)
-        return PublishResult.failure_result("blog", "Blog publishing requires Astro setup")
+        try:
+            from .publishers.blog import BlogPublisher
+            publisher = BlogPublisher()
+            return await publisher.publish(article, content, ogp_path=ogp_path)
+        except Exception as e:
+            return PublishResult.failure_result("blog", str(e))
 
     else:
         return PublishResult.failure_result(platform, f"Unknown platform: {platform}")
@@ -252,9 +293,9 @@ def validate(
     # Show enabled platforms
     console.print(f"\n[bold]Enabled platforms:[/bold]")
     for platform in article.get_enabled_platforms():
-        console.print(f"  • {platform}")
+        console.print(f"  - {platform}")
 
-    console.print("\n[green]✓ Article is valid[/green]")
+    console.print("\n[green]OK - Article is valid[/green]")
 
 
 @app.command()
@@ -313,7 +354,7 @@ def screenshot(
 
         tool = ScreenshotTool()
 
-        with console.status(f"Capturing screenshot from {source}..."):
+        with console.status(spinner="line", status=f"Capturing screenshot from {source}..."):
             try:
                 result = await tool.capture(
                     source=source,
@@ -453,45 +494,89 @@ def announce(
 
         for result in results:
             if result.success:
-                console.print(f"  [green]✓[/green] {result.platform}: {result.url}")
+                console.print(f"  [green]OK[/green] {result.platform}: {result.url}")
             else:
-                console.print(f"  [red]✗[/red] {result.platform}: {result.error}")
+                console.print(f"  [red]NG[/red] {result.platform}: {result.error}")
 
     asyncio.run(_announce())
 
 
 @app.command(name="note-login")
-def note_login(
-    headless: bool = typer.Option(
-        False,
-        "--headless",
-        help="Run browser in headless mode"
-    ),
-):
-    """Test login to Note using Playwright."""
+def note_login():
+    """Test login to Note and verify session cookies."""
     async def _test():
         try:
             from .publishers.note import NotePublisher
 
             console.print("[bold]Testing Note login...[/bold]")
 
-            publisher = NotePublisher(headless=headless)
-            success = await publisher.test_login()
+            publisher = NotePublisher()
 
-            if success:
-                console.print("[green]✓ Login successful![/green]")
-            else:
-                console.print("[red]✗ Login failed[/red]")
-                raise typer.Exit(1)
+            # First check existing cookies
+            if await publisher.test_login():
+                console.print(f"[green]OK Logged in as {publisher.urlname}[/green]")
+                return
+
+            # Try to login via Playwright
+            console.print("[dim]No valid session, logging in via browser...[/dim]")
+            if await publisher._login_and_save_cookies():
+                if await publisher.test_login():
+                    console.print(f"[green]OK Login successful! ({publisher.urlname})[/green]")
+                    return
+
+            console.print("[red]NG Login failed[/red]")
+            console.print("[dim]Check NOTE_EMAIL and NOTE_PASSWORD env vars[/dim]")
+            raise typer.Exit(1)
 
         except ImportError as e:
             console.print(f"[red]Error:[/red] {e}")
             raise typer.Exit(1)
-        except ValueError as e:
-            console.print(f"[red]Configuration error:[/red] {e}")
-            raise typer.Exit(1)
 
     asyncio.run(_test())
+
+
+@app.command(name="generate-ogp")
+def generate_ogp(
+    article_path: str = typer.Argument(..., help="Path to the article markdown file"),
+    output: Optional[str] = typer.Option(
+        None,
+        "--output", "-o",
+        help="Output PNG file path. Defaults to articles/images/{slug}-ogp.png"
+    ),
+    theme: str = typer.Option(
+        "default",
+        "--theme", "-t",
+        help="Color theme: default, purple, green, orange"
+    ),
+):
+    """Generate OGP/title image for an article."""
+    async def _generate():
+        from .tools.ogp_generator import OgpGenerator
+
+        parser = ArticleParser()
+        try:
+            article = parser.parse_file(article_path)
+        except FileNotFoundError:
+            console.print(f"[red]Error:[/red] Article not found: {article_path}")
+            raise typer.Exit(1)
+
+        gen = OgpGenerator()
+        out_path = output or f"articles/images/{article.slug}-ogp.png"
+
+        console.print(f"[bold]Generating OGP image...[/bold]")
+        console.print(f"[dim]Title: {article.title}[/dim]")
+        console.print(f"[dim]Theme: {theme}[/dim]")
+
+        result = await gen.generate(
+            title=article.title,
+            tags=article.tags,
+            output=out_path,
+            author=article.author,
+            theme=theme,
+        )
+        console.print(f"[green]Saved:[/green] {result}")
+
+    asyncio.run(_generate())
 
 
 @app.command(name="test-announce")
@@ -518,9 +603,9 @@ def test_announce(
         result = await service._announcers[platform].post(message)
 
         if result.success:
-            console.print(f"[green]✓ Success![/green] {result.url}")
+            console.print(f"[green]OK Success![/green] {result.url}")
         else:
-            console.print(f"[red]✗ Failed:[/red] {result.error}")
+            console.print(f"[red]NG Failed:[/red] {result.error}")
             raise typer.Exit(1)
 
     asyncio.run(_test())

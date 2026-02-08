@@ -23,6 +23,9 @@ platforms:
 announcement:
   enabled: true
   platforms: [twitter, bluesky, misskey]
+
+ogp:
+  theme: "default"  # default, purple, green, orange
 ---
 
 <!--
