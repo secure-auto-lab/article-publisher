@@ -1,7 +1,54 @@
 """Message generator for SNS announcements."""
 from __future__ import annotations
 
+import re
+import unicodedata
+
 from ..transformer.article import Article
+
+
+def twitter_weighted_len(text: str) -> int:
+    """Calculate Twitter's weighted character count.
+
+    Twitter counts CJK/full-width characters as 2 and URLs as 23.
+    """
+    text_no_urls = re.sub(r"https?://\S+", "x" * 23, text)
+    count = 0
+    for ch in text_no_urls:
+        if unicodedata.east_asian_width(ch) in ("W", "F"):
+            count += 2
+        else:
+            count += 1
+    return count
+
+
+def twitter_weighted_truncate(text: str, max_len: int) -> str:
+    """Truncate text to fit within Twitter's weighted character limit."""
+    if twitter_weighted_len(text) <= max_len:
+        return text
+    result = []
+    count = 0
+    i = 0
+    while i < len(text):
+        # Detect URL start
+        if text[i:].startswith("http://") or text[i:].startswith("https://"):
+            url_match = re.match(r"https?://\S+", text[i:])
+            if url_match:
+                url = url_match.group(0)
+                if count + 23 > max_len:
+                    break
+                result.append(url)
+                count += 23
+                i += len(url)
+                continue
+        ch = text[i]
+        w = 2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1
+        if count + w > max_len:
+            break
+        result.append(ch)
+        count += w
+        i += 1
+    return "".join(result)
 
 
 class MessageGenerator:
@@ -39,7 +86,10 @@ class MessageGenerator:
         return urls.get("blog") or urls.get("zenn") or urls.get("qiita") or ""
 
     def _generate_twitter(self, article: Article, urls: dict[str, str]) -> str:
-        """Generate Twitter-optimized message (280 char limit)."""
+        """Generate Twitter-optimized message (280 weighted char limit).
+
+        Twitter counts CJK/full-width characters as 2 and URLs as 23.
+        """
         url = self._get_primary_url(urls)
         hashtags = " ".join(f"#{tag}" for tag in article.tags[:3])
 
@@ -48,10 +98,10 @@ class MessageGenerator:
         if url:
             msg += f"\n\n{url}"
 
-        if len(msg) + len(hashtags) + 2 <= self.TWITTER_MAX_LENGTH:
+        if twitter_weighted_len(msg) + twitter_weighted_len(hashtags) + 2 <= self.TWITTER_MAX_LENGTH:
             msg += f"\n\n{hashtags}"
 
-        return msg[:self.TWITTER_MAX_LENGTH]
+        return twitter_weighted_truncate(msg, self.TWITTER_MAX_LENGTH)
 
     def _generate_bluesky(self, article: Article, urls: dict[str, str]) -> str:
         """Generate Bluesky message."""
