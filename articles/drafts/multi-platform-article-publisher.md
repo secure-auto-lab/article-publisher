@@ -1,10 +1,29 @@
 ---
 title: "技術記事を4つのプラットフォームに同時投稿するCLIを作った話"
+slug: "multi-platform-article-publisher"
 description: "Note・Zenn・Qiita・自作ブログへの投稿を1コマンドで自動化。Markdown1つで全プラットフォームに配信するPython CLIツールの設計と実装を解説します。"
-pubDate: "2026-02-08"
-updatedDate: "2026-02-08"
-tags: ["Python", "CLI", "自動化", "Zenn", "Note", "技術ブログ"]
-author: "secure＆autoラボ"
+tags: [Python, CLI, 自動化, Zenn, Note, 技術ブログ]
+category: "tech"
+author: "tinou"
+created_at: 2026-02-08
+updated_at: 2026-02-08
+
+platforms:
+  note:
+    enabled: true
+    price: 500
+  zenn:
+    enabled: true
+    emoji: "🚀"
+    topics: [python, automation, techblog, playwright, cli]
+  qiita:
+    enabled: false
+  blog:
+    enabled: true
+
+announcement:
+  enabled: true
+  platforms: [twitter]
 ---
 
 # 技術記事を4つのプラットフォームに同時投稿するCLIを作った話
@@ -190,7 +209,230 @@ class ZennPlatformConfig:
 | 画像 | 相対パス | アップロード | アップロード | public/ |
 | 有料部分 | - | `:::note-only` | - | - |
 
-これらの差分を **Converter** クラスで吸収しています。コンバーターはプラットフォーム固有のブロック（`"
+これらの差分を **Converter** クラスで吸収しています。コンバーターはプラットフォーム固有のブロック（`<!-- platform:xxx -->`）を処理し、frontmatterを変換します。
+
+```python
+class ZennConverter(PlatformConverter):
+    def convert(self, article: Article) -> str:
+        content = self._strip_platform_blocks(article.content, "zenn")
+        frontmatter = self._generate_frontmatter(article)
+        return f"{frontmatter}\n\n{content}"
+```
+
+### Step 3: プラットフォーム別Publisher
+
+各プラットフォームの投稿方法は大きく異なります。
+
+#### Zenn — Git pushで自動デプロイ
+
+Zennは **GitHubリポジトリ連携** が最もシンプルです。`zenn-content/articles/` にファイルを配置して `git push` するだけで、Zennが自動的にデプロイします。API認証は不要です。
+
+#### Note — Playwrightでブラウザ自動操作
+
+NoteにはAPIがないため、**Playwright**（ブラウザ自動化）で投稿します。ログイン → 記事作成 → 本文入力 → 有料設定 → 公開 の一連の操作を自動化しています。
+
+**💡 ハマりポイント：**
+NoteのUIは頻繁に変わるため、セレクタが壊れやすいです。テスト用に `note-login` コマンドを用意して、定期的にログイン確認できるようにしました。
+
+```bash
+python -m src.cli note-login  # ログインテスト
+```
+
+#### Qiita — REST API v2
+
+Qiitaは公式REST APIがあり、最もシンプルに実装できます。`httpx` で非同期HTTPリクエストを送信し、タグはオブジェクト配列形式に変換します。
+
+#### Blog — Astro + Cloudflare Pages
+
+自作ブログはAstroの `src/content/articles/` にMarkdownを配置し、Cloudflare Pagesで自動ビルド・デプロイされます。
+
+### Step 4: SNS告知の自動化
+
+記事を全プラットフォームに投稿した後、自動的にSNS告知を行います。X（Twitter）への投稿は **tweepy**（OAuth 1.0a認証）を使用しています。Free Tierでは月間の投稿数に制限がありますが、記事告知には十分です。
+
+---
+
+## 📊 技術スタック
+
+| 要素 | 技術 |
+|------|------|
+| 言語 | Python 3.11+ |
+| CLI | Typer |
+| データモデル | dataclass |
+| ブラウザ自動化 | Playwright |
+| HTTP通信 | httpx |
+| ブログ | Astro + Tailwind CSS |
+| ホスティング | Cloudflare Pages |
+| X投稿 | tweepy (OAuth 1.0a) |
+
+---
+
+<!-- platform:note -->
+:::note-only
+
+---
+
+## 🔒 ここから有料部分：完全なソースコード
+
+無料部分をお読みいただきありがとうございます。
+
+ここまでで設計思想と全体の仕組みは理解していただけたかと思います。有料部分では、**実際に動作する完全なソースコード**を全て公開します。
+
+- ✅ Articleデータモデル（article.py）
+- ✅ プラットフォーム別Converter（converter.py）
+- ✅ Zenn Publisher（Git操作）
+- ✅ Note Publisher（Playwright自動化）
+- ✅ Qiita Publisher（REST API）
+- ✅ Blog Publisher（Astro連携）
+- ✅ SNS Announcer（Twitter/Bluesky/Misskey）
+
+**「私が数週間かけて試行錯誤したコードを、そのままコピペで使えます。」**
+
+---
+
+### 📁 プロジェクト構成
+
+```
+article-publisher/
+├── articles/
+│   ├── drafts/              # 下書き
+│   ├── published/           # 投稿済み
+│   └── templates/           # テンプレート
+├── src/
+│   ├── cli.py               # CLIエントリポイント
+│   ├── transformer/
+│   │   ├── article.py       # データモデル
+│   │   ├── parser.py        # Markdownパーサー
+│   │   └── converter.py     # プラットフォーム変換
+│   ├── publishers/
+│   │   ├── base.py          # 基底クラス
+│   │   ├── note.py          # Note (Playwright)
+│   │   ├── zenn.py          # Zenn (Git)
+│   │   ├── qiita.py         # Qiita (API)
+│   │   └── blog.py          # Blog (Astro)
+│   └── announcer/
+│       ├── service.py        # SNS告知サービス
+│       └── message.py        # メッセージ生成
+├── blog/                     # Astroブログ
+└── pyproject.toml
+```
+
+---
+
+### 1. データモデル（article.py）
+
+記事の全情報を保持する統一モデルです。
+
+```python
+from __future__ import annotations
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+
+
+class PublishStatus(Enum):
+    DRAFT = "draft"
+    SCHEDULED = "scheduled"
+    PUBLISHED = "published"
+    FAILED = "failed"
+
+
+@dataclass
+class NotePlatformConfig:
+    enabled: bool = True
+    status: PublishStatus = PublishStatus.DRAFT
+    price: int = 0  # 0 = free, 100-50000 = paid
+    scheduled_at: datetime | None = None
+    published_url: str | None = None
+
+
+@dataclass
+class ZennPlatformConfig:
+    enabled: bool = True
+    status: PublishStatus = PublishStatus.DRAFT
+    emoji: str = "📝"
+    topics: list[str] = field(default_factory=list)
+    article_type: str = "tech"
+    published_url: str | None = None
+
+
+@dataclass
+class QiitaPlatformConfig:
+    enabled: bool = True
+    status: PublishStatus = PublishStatus.DRAFT
+    private: bool = False
+    published_url: str | None = None
+
+
+@dataclass
+class BlogPlatformConfig:
+    enabled: bool = True
+    status: PublishStatus = PublishStatus.DRAFT
+    published_url: str | None = None
+
+
+@dataclass
+class PlatformConfig:
+    note: NotePlatformConfig = field(default_factory=NotePlatformConfig)
+    zenn: ZennPlatformConfig = field(default_factory=ZennPlatformConfig)
+    qiita: QiitaPlatformConfig = field(default_factory=QiitaPlatformConfig)
+    blog: BlogPlatformConfig = field(default_factory=BlogPlatformConfig)
+
+
+@dataclass
+class AnnouncementConfig:
+    enabled: bool = True
+    platforms: list[str] = field(
+        default_factory=lambda: ["twitter", "bluesky", "misskey"]
+    )
+
+
+@dataclass
+class Article:
+    title: str
+    slug: str
+    description: str
+    content: str
+
+    tags: list[str] = field(default_factory=list)
+    category: str = "tech"
+    author: str = "tinou"
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)
+
+    platforms: PlatformConfig = field(default_factory=PlatformConfig)
+    announcement: AnnouncementConfig = field(default_factory=AnnouncementConfig)
+
+    def get_enabled_platforms(self) -> list[str]:
+        enabled = []
+        if self.platforms.note.enabled:
+            enabled.append("note")
+        if self.platforms.zenn.enabled:
+            enabled.append("zenn")
+        if self.platforms.qiita.enabled:
+            enabled.append("qiita")
+        if self.platforms.blog.enabled:
+            enabled.append("blog")
+        return enabled
+```
+
+---
+
+### 2. プラットフォーム別コンバーター（converter.py）
+
+```python
+import re
+from abc import ABC, abstractmethod
+from .article import Article
+
+
+class PlatformConverter(ABC):
+    @abstractmethod
+    def convert(self, article: Article) -> str:
+        pass
+
+    def _strip_platform_blocks(self, content: str, keep: str) -> str:
+        pattern = r"<!-- platform:(\w+) -->\s*(.*?)\s*<!-- endplatform -->"
         def replacer(match):
             if match.group(1) == keep:
                 return match.group(2)
@@ -266,7 +508,7 @@ class ZennPublisher(Publisher):
         file.write_text(content, encoding="utf-8")
 
         if await self._git_push(article.slug, f"Add: {article.title}"):
-            user = os.getenv("ZENN_USERNAME", "secure＆autoラボ")
+            user = os.getenv("ZENN_USERNAME", "tinou")
             url = f"https://zenn.dev/{user}/articles/{article.slug}"
             return PublishResult.success_result("zenn", url)
         return PublishResult.failure_result("zenn", "Git push failed")
@@ -458,6 +700,8 @@ class TwitterAnnouncer:
 :::
 <!-- endplatform -->
 
+<!-- platform:blog -->
+
 ---
 
 ## 💡 完全なソースコードはNoteで公開中
@@ -475,7 +719,25 @@ class TwitterAnnouncer:
 
 👉 [Noteで完全版ソースコードを見る](https://note.com/secure_auto_lab/)
 
+<!-- endplatform -->
 
+<!-- platform:zenn -->
+
+---
+
+## 🔗 他のプラットフォームでも公開中
+
+この記事は複数のプラットフォームで公開しています。
+
+| プラットフォーム | 内容 |
+|---|---|
+| **Blog** | 全文 + SEO最適化版 → [blog.secure-auto-lab.com](https://blog.secure-auto-lab.com/articles/multi-platform-article-publisher) |
+| **Note** | 全文 + 完全なソースコード（有料） → [note.com/secure_auto_lab](https://note.com/secure_auto_lab/) |
+| **X** | 最新記事の告知 → [@secure_auto_lab](https://x.com/secure_auto_lab) |
+
+フォロー・いいね・バッジで応援いただけると励みになります！
+
+<!-- endplatform -->
 
 ## 📝 まとめ：今日からできるアクションプラン
 

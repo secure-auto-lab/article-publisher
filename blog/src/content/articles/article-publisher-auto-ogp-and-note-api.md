@@ -4,7 +4,7 @@ description: "マルチプラットフォーム記事投稿CLIに、OGP画像の
 pubDate: "2026-02-08"
 updatedDate: "2026-02-08"
 tags: ["Python", "CLI", "自動化", "OGP", "Note", "Zenn", "Qiita"]
-author: "tinou"
+author: "secure＆autoラボ"
 ---
 
 # 記事投稿ツールを大幅アップデート｜OGP自動生成・Note API化・Qiita対応を一気に実装した話

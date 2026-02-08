@@ -8,7 +8,7 @@ tags:
   - AI
   - 開発効率化
   - 自動化
-author: tinou
+author: secure＆autoラボ
 noteUrl: "https://note.com/your-username/n/example"
 amazonProducts:
   - asin: "B0XXXXXXXXX"

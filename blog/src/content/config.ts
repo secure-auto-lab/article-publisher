@@ -11,7 +11,7 @@ const articles = defineCollection({
     updatedDate: z.coerce.date().optional(),
     category: z.enum(categories).default('dev-tips'),
     tags: z.array(z.string()).optional(),
-    author: z.string().default('tinou'),
+    author: z.string().default('secure＆autoラボ'),
     heroImage: z.string().optional(),
     // Monetization
     noteUrl: z.string().optional(), // Link to paid Note article
