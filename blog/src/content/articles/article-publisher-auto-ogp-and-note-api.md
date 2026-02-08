@@ -3,6 +3,7 @@ title: "記事投稿ツールを大幅アップデート｜OGP自動生成・Not
 description: "マルチプラットフォーム記事投稿CLIに、OGP画像の自動生成・Note内部API対応・Qiita連携を追加。1コマンドで6プラットフォームに配信できる仕組みの設計と実装を解説します。"
 pubDate: "2026-02-08"
 updatedDate: "2026-02-08"
+category: "automation"
 tags: ["Python", "CLI", "自動化", "OGP", "Note", "Zenn", "Qiita"]
 author: "secure＆autoラボ"
 ---

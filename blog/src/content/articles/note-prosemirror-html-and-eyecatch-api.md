@@ -3,6 +3,7 @@ title: "NoteのProseMirror対応HTML変換を作った話｜アイキャッチ�
 description: "NoteのProseMirrorエディタが受け付けるHTML形式をテストで完全特定し、Markdown→HTML変換器を構築。さらにJSバンドル解析でアイキャッチ画像APIを発見し、1コマンドでOGP画像の自動設定を実現した話。"
 pubDate: "2026-02-08"
 updatedDate: "2026-02-08"
+category: "dev-tips"
 tags: ["Python", "Note", "API", "ProseMirror", "自動化"]
 author: "tinou"
 ---

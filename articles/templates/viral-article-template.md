@@ -3,7 +3,7 @@ title: "【タイトル例】〇〇を△△日で解決した話｜具体的な
 slug: "article-slug"
 description: "読者の悩みを言語化 + この記事で得られるベネフィットを約束"
 tags: [技術名, フレームワーク名, 課題キーワード]
-category: "tech"
+category: "dev-tips"  # python -m src.config で一覧表示
 author: "tinou"
 created_at: 2026-02-07
 

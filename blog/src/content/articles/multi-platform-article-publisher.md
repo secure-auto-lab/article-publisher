@@ -3,6 +3,7 @@ title: "技術記事を4つのプラットフォームに同時投稿するCLI�
 description: "Note・Zenn・Qiita・自作ブログへの投稿を1コマンドで自動化。Markdown1つで全プラットフォームに配信するPython CLIツールの設計と実装を解説します。"
 pubDate: "2026-02-08"
 updatedDate: "2026-02-08"
+category: "automation"
 tags: ["Python", "CLI", "自動化", "Zenn", "Note", "技術ブログ"]
 author: "secure＆autoラボ"
 ---

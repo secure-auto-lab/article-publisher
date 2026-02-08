@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 
+from ..config import resolve_category
 from .article import Article
 
 
@@ -140,12 +141,14 @@ class BlogConverter(PlatformConverter):
     def _generate_frontmatter(self, article: Article) -> str:
         """Generate Astro-compatible frontmatter."""
         tags_str = ", ".join(f'"{t}"' for t in article.tags)
+        category = resolve_category(article.category)
 
         return f"""---
 title: "{article.title}"
 description: "{article.description}"
 pubDate: "{article.created_at.strftime('%Y-%m-%d')}"
 updatedDate: "{article.updated_at.strftime('%Y-%m-%d')}"
+category: "{category}"
 tags: [{tags_str}]
 author: "{article.author}"
 ---"""

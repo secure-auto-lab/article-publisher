@@ -82,7 +82,7 @@ class Article:
 
     # Metadata
     tags: list[str] = field(default_factory=list)
-    category: str = "tech"
+    category: str = "dev-tips"
     author: str = "tinou"
     created_at: datetime = field(default_factory=datetime.now)
     updated_at: datetime = field(default_factory=datetime.now)
