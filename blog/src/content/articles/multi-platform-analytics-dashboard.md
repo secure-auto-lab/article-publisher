@@ -75,7 +75,7 @@ APIが公開されているプラットフォームならデータ取得は自�
 | データ更新 | 手動 | 毎朝5:51に自動取得 |
 | 運用コスト | 無料 | 無料（GitHub Actions無料枠内） |
 
-![ダッシュボード Overview](./images/dashboard-overview.png)
+![ダッシュボード Overview](/images/dashboard-overview.png)
 
 **8つのタブで全データを網羅するダッシュボードが、毎朝自動で更新される。** たったこれだけで、データ分析のストレスが消えました。
 
