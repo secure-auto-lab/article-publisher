@@ -70,7 +70,7 @@ Astro のゼロJSアーキテクチャと Tailwind v4 の `@theme` ディレク�
 | クライアントJS | ほぼゼロ（React island のみ） |
 | 構築期間 | 設計含め1日 |
 
-<img src="/images/sal-hero.png" alt="Secure Auto Lab - Hero" />
+![Secure Auto Lab - Hero](/images/sal-hero.png)
 
 **ダークテーマ + ゴールドアクセントの "Midnight Authority" というデザインコンセプトで、信頼感と専門性を表現するサイトが完成しました。**
 
@@ -341,7 +341,7 @@ export const projects: Project[] = [
 
 このデータは、メインページの実績グリッド、サービス詳細ページの関連実績、個別の実績詳細ページの3箇所から参照される。データの変更が即座に全ページに反映される。
 
-<img src="/images/sal-works-detail.png" alt="実績詳細ページ" />
+![実績詳細ページ](/images/sal-works-detail.png)
 
 ### Step 5: Astro 設定とデプロイ
 
