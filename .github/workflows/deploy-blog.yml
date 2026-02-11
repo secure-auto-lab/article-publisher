@@ -1,11 +1,12 @@
 name: Deploy Blog to Cloudflare Pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'blog/**'
-      - 'articles/published/**'
+  workflow_dispatch:  # Cloudflare Pages GitHub連携で自動デプロイされるため、手動実行のみ
+  # push:
+  #   branches: [main]
+  #   paths:
+  #     - 'blog/**'
+  #     - 'articles/published/**'
 
 jobs:
   deploy:
