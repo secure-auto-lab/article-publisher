@@ -131,6 +131,14 @@ class QiitaPublisher(Publisher):
         if len(article.tags) > 5:
             errors.append("Maximum 5 tags allowed")
 
+        # Tags must not contain spaces (Qiita API rejects them with 403)
+        for tag in article.tags:
+            if " " in tag:
+                errors.append(
+                    f"Tag '{tag}' contains spaces. "
+                    "Qiita tags must not contain spaces (e.g. 'TailwindCSS' not 'Tailwind CSS')"
+                )
+
         return errors
 
     def _build_payload(self, article: Article, content: str) -> dict[str, Any]:

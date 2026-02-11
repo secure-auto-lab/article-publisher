@@ -328,6 +328,25 @@ Note・Zenn投稿時は **OGP画像が自動生成** され、各プラットフ
 
 OGPテーマ: `default`(ブルー), `purple`, `green`, `orange`
 
+### Blog記事内の画像パス（重要）
+
+Astro のコンテンツコレクションでは、Markdown 内の画像パス（`![](path)`）をローカルファイルとして解決しようとします。
+**相対パス（`./images/foo.png`）や絶対パス（`/images/foo.png`）を使うと、ファイルが見つからない場合にビルドエラーになります。**
+
+```markdown
+# NG - 画像が blog/public/images/ に存在しないとビルドエラー
+![screenshot](./images/sal-hero.png)
+
+# OK - blog/public/images/ に画像を配置し、/images/ パスで参照
+![screenshot](/images/sal-hero.png)
+```
+
+**手順:**
+1. 画像を `blog/public/images/` に配置する（gitignore されている場合は `git add -f`）
+2. 記事内では `/images/ファイル名.png` パスで参照する（`./` 相対パスは NG）
+3. **画像が `public/images/` に存在しないとビルドエラーになる** — 必ず画像を先に配置すること
+4. OGP画像は BlogPublisher が自動コピーするが、記事内画像は手動コピーが必要
+
 ### Blogのデプロイ
 
 ```bash
