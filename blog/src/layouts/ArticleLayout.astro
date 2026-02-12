@@ -4,6 +4,7 @@ import ShareButtons from '../components/ShareButtons.astro';
 import AdSense from '../components/AdSense.astro';
 import SupportButtons from '../components/SupportButtons.astro';
 import AmazonProduct from '../components/AmazonProduct.astro';
+import BlogCTA from '../components/BlogCTA.astro';
 
 interface Props {
   frontmatter: {
@@ -68,6 +69,17 @@ const jsonLd = {
 };
 
 const meta = categoryMeta[category] || categoryMeta['dev-tips'];
+
+const ctaVariantMap: Record<string, 'automation' | 'security' | 'appdev' | 'general'> = {
+  automation: 'automation',
+  ai: 'automation',
+  security: 'security',
+  'dev-tips': 'general',
+  projects: 'appdev',
+  web: 'appdev',
+  infrastructure: 'general',
+};
+const ctaVariant = ctaVariantMap[category] || 'general';
 ---
 
 <BaseLayout title={`${title} | Secure Auto Lab`} description={description}>
@@ -135,6 +147,11 @@ const meta = categoryMeta[category] || categoryMeta['dev-tips'];
     <!-- Article content -->
     <div class="prose prose-lg prose-invert max-w-none">
       <slot />
+    </div>
+
+    <!-- Blog → B2B CTA -->
+    <div class="my-12">
+      <BlogCTA variant={ctaVariant} />
     </div>
 
     <!-- Note CTA -->
