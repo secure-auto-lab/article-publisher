@@ -101,8 +101,11 @@
 
 ### 基本構成（推奨）
 
-この記事は **ブログ（技術記事）** と **Note（ストーリー記事）** に同時投稿されます。
-Note版では技術セクション（🔧実装、❓FAQ、📚参考リンク）が自動除去されます。
+この記事は **ブログ・Note・Zenn・Qiita** に同時投稿されます。
+各プラットフォーム向けに自動変換されます。
+- **Note版**: 技術セクション（🔧実装、❓FAQ、📚参考リンク）が自動除去 → ストーリー記事
+- **Zenn版**: ストーリー系セクションが自動除去 → 技術記事
+- **Qiita版**: `<!-- qiita-section -->` マーカー内を抽出 → 自立した実用記事
 → 「💭考え方」「🧱壁と乗り越え方」「🎓教訓」が Note版の核になります。
 
 ```
@@ -136,6 +139,12 @@ Note版では技術セクション（🔧実装、❓FAQ、📚参考リンク�
    ├── アーキテクチャ
    ├── Step 1, 2, 3... のコード・スクリーンショット
    └── ポイント解説
+
+7.5. 💡 実践Tips・よくあるエラーと解決法 ← Qiita版の核
+     <!-- qiita-section --> で囲む
+     ├── よくあるエラーメッセージと解決法
+     ├── 環境構築の手順（コピペで動くレベル）
+     └── パフォーマンス改善のTips
 
 8. 🧱 壁にぶつかった瞬間と乗り越え方 ← Note版の核②
    ├── 絶望の瞬間（感情を込める）
@@ -196,6 +205,12 @@ Note版では技術セクション（🔧実装、❓FAQ、📚参考リンク�
 - [ ] 「教訓」が技術を超えた汎用的な内容になっているか
 - [ ] コードを読まなくても考え方・背景が伝わるか
 
+### Qiita向け（実践Tips）
+- [ ] `<!-- qiita-section -->` マーカーで実用セクションを囲んでいるか
+- [ ] マーカー内だけで自立した記事として成立するか（ブログへの誘導感がないか）
+- [ ] エラー解決・手順・Tipsなど検索ユーザーに役立つ内容か
+- [ ] コピペで動くコード例が含まれているか
+
 ### 感情
 - [ ] 共感できるエピソードがあるか
 - [ ] ポジティブな感情（喜び・驚き）で終わっているか
@@ -241,7 +256,7 @@ Note版では技術セクション（🔧実装、❓FAQ、📚参考リンク�
 | **Blog** | Astro + Cloudflare Pages | blog.secure-auto-lab.com | Amazon Associate / AdSense |
 | **Note** | 内部API (httpx) | engineer@secure-auto-lab.com | 有料記事販売 |
 | **Zenn** | GitHub連携（自動デプロイ） | secure_auto_lab | バッジ（投げ銭） |
-| **Qiita** | REST API v2 | secure-auto-lab | 集客（ブログ誘導） |
+| **Qiita** | REST API v2 | secure-auto-lab | 集客（自立した実用記事） |
 | **X** | Twitter API v2 (Free Tier) | @secure_auto_lab | 集客（直接収益なし） |
 | **Bluesky** | AT Protocol | @secure-auto-lab | 集客 |
 | **Misskey** | REST API | @secure_auto_lab | 集客 |
@@ -310,7 +325,7 @@ python -m src.cli publish → 一括投稿
   │         OGP画像 → zenn-content/images/{slug}-ogp.png
   │         → 自動 git push → Zenn デプロイ
   │
-  ├── Qiita: REST API → 要約+ブログ誘導リンク
+  ├── Qiita: REST API → 実践Tips抽出（自立した技術記事）
   │
   └── SNS告知: X → Bluesky → Misskey (時間差)
 ```
@@ -324,7 +339,7 @@ Note・Zenn投稿時は **OGP画像が自動生成** され、各プラットフ
 | **Blog** | `blog/public/images/{slug}-ogp.png` にコピー（公開URL提供元） |
 | **Note** | ブログURL参照: `<figure><img src="https://blog.secure-auto-lab.com/images/{slug}-ogp.png">` |
 | **Zenn** | `zenn-content/images/{slug}-ogp.png` にコピー → 記事先頭に `![OGP](/images/{slug}-ogp.png)` |
-| **Qiita** | 要約記事のため不要 |
+| **Qiita** | 自立した技術記事のため不要（canonical URLでSEO重複回避） |
 
 OGPテーマ: `default`(ブルー), `purple`, `green`, `orange`
 
@@ -381,7 +396,10 @@ git push origin main
 - OGP画像は `zenn-content/images/` に自動コピー
 
 **Qiita**
-- 収益化不可のため、要約+ブログ誘導のみ投稿
+- `<!-- qiita-section -->` マーカー内の実用Tipsを抽出し、自立した技術記事として投稿
+- 末尾にブログへの控えめな関連情報リンク + canonical URLでSEO重複回避
+- マーカーがない場合はストーリー系を除去した技術内容をフォールバック
+- 検索経由の初級〜中級エンジニア向け：エラー解決・備忘録・入門記事が効果的
 - REST API v2使用、アクセストークンは `.env` に設定
 
 **X (@secure_auto_lab)**

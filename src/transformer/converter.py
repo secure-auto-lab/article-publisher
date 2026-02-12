@@ -320,36 +320,107 @@ canonical: "{canonical_url}"
 
 
 class QiitaConverter(PlatformConverter):
-    """Convert article to Qiita format.
+    """Qiita向けコンバーター。
 
-    Qiita is non-monetizable, so content is a summary with a link
-    to the full article on the blog (similar to SNS announcements).
+    ブログ記事内の <!-- qiita-section --> マーカーで囲まれた
+    実用セクション（Tips、エラー解決、手順）を抽出し、
+    Qiitaで自立した技術記事として成立する内容を生成する。
+
+    マーカーがない場合はフォールバックとして、
+    ストーリー系セクションを除去し技術内容を残す。
     """
 
     BLOG_BASE_URL = "https://blog.secure-auto-lab.com/articles"
 
+    _STORY_KEYWORDS = [
+        "悩み", "抱えていませんか",
+        "ストーリー", "道のり",
+        "なぜこのアプローチ", "アプローチを選んだ",
+        "壁にぶつかった", "乗り越え方",
+        "教訓", "学んだ", "学び",
+        "おわりに", "伝えたかった",
+        "この記事で得られること",
+        "Before", "After", "転機",
+        "どん底", "絶望", "突破口",
+        "発想の転換",
+    ]
+
     def convert(self, article: Article) -> str:
-        blog_url = f"{self.BLOG_BASE_URL}/{article.slug}"
-        tags_str = " / ".join(article.tags[:5])
+        content = self._strip_platform_blocks(article.content, "qiita")
 
-        return f"""# {article.title}
+        sections = self._extract_qiita_sections(content)
 
-{article.description}
+        if sections:
+            body = "\n\n".join(sections)
+        else:
+            body = self._extract_technical_content(content)
 
-## この記事について
+        result = f"# {article.title}\n\n{body}"
+        result = self._remove_share_cta(result)
+        result = self._clean_empty_lines(result)
+        result = self._add_blog_footer(result, article.slug, article.title)
 
-本記事の全文は以下のブログで公開しています。
+        return result
 
-**[>> 全文を読む: {article.title}]({blog_url})**
+    def _extract_qiita_sections(self, content: str) -> list[str]:
+        """<!-- qiita-section -->...<!-- /qiita-section --> マーカーの内容を抽出。"""
+        pattern = r"<!-- qiita-section -->\s*(.*?)\s*<!-- /qiita-section -->"
+        return re.findall(pattern, content, flags=re.DOTALL)
 
-### タグ
+    def _extract_technical_content(self, content: str) -> str:
+        """フォールバック: ストーリー系セクションを除去し技術内容を残す。"""
+        lines = content.split("\n")
+        result = []
+        skip = False
+        skip_level = 0
 
-{tags_str}
+        for line in lines:
+            heading_match = re.match(r"^(#{1,6})\s+(.+)$", line)
+            if heading_match:
+                level = len(heading_match.group(1))
+                text = heading_match.group(2)
+
+                clean = re.sub(
+                    r"[\U0001f300-\U0001f9ff\u2600-\u27bf\u2700-\u27bf]",
+                    "", text,
+                ).strip()
+
+                if any(kw in clean for kw in self._STORY_KEYWORDS):
+                    skip = True
+                    skip_level = level
+                    continue
+                elif skip and level <= skip_level:
+                    skip = False
+
+            if not skip:
+                result.append(line)
+
+        return "\n".join(result)
+
+    def _remove_share_cta(self, content: str) -> str:
+        """シェア促進テキストを除去する。"""
+        content = re.sub(r"<!-- SNS共有の促進 -->\s*", "", content)
+        content = re.sub(
+            r"\*\*この記事が役に立ったら、ぜひシェアをお願いします.*?\*\*\s*",
+            "", content, flags=re.DOTALL,
+        )
+        content = re.sub(r"あなたのシェアが、同じ悩みを持つ誰かの助けになります。\s*", "", content)
+        return content
+
+    def _clean_empty_lines(self, content: str) -> str:
+        """連続する空行を2行までに整理する。"""
+        return re.sub(r"\n{3,}", "\n\n", content)
+
+    def _add_blog_footer(self, content: str, slug: str, title: str) -> str:
+        """控えめなブログ案内フッターを追加する。"""
+        blog_url = f"{self.BLOG_BASE_URL}/{slug}"
+        content = re.sub(r"(\n---\s*)+$", "", content.rstrip())
+        return content + f"""
 
 ---
 
-> この記事は [secure-auto-lab.com]({blog_url}) からの要約です。
-> 全文・ソースコード・詳細解説はブログ本文をご覧ください。
+この記事の関連情報・背景解説はブログでも公開しています。
+[{title} - Secure Auto Lab]({blog_url})
 """
 
 
