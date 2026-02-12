@@ -5,6 +5,8 @@ import AdSense from '../components/AdSense.astro';
 import SupportButtons from '../components/SupportButtons.astro';
 import AmazonProduct from '../components/AmazonProduct.astro';
 import BlogCTA from '../components/BlogCTA.astro';
+import Icon from '../components/Icon.astro';
+import type { IconName } from '../components/icons';
 
 interface Props {
   frontmatter: {
@@ -38,14 +40,14 @@ const {
   amazonProducts = [],
 } = frontmatter;
 
-const categoryMeta: Record<string, { label: string; icon: string; gradient: string }> = {
-  automation: { label: '自動化', icon: '⚡', gradient: 'from-amber-500 to-orange-600' },
-  ai: { label: 'AI', icon: '🤖', gradient: 'from-violet-500 to-purple-600' },
-  security: { label: 'セキュリティ', icon: '🔐', gradient: 'from-emerald-500 to-teal-600' },
-  'dev-tips': { label: 'Tips', icon: '💡', gradient: 'from-cyan-500 to-blue-600' },
-  projects: { label: 'プロジェクト', icon: '🚀', gradient: 'from-pink-500 to-rose-600' },
-  web: { label: 'Web', icon: '🌐', gradient: 'from-blue-500 to-indigo-600' },
-  infrastructure: { label: 'インフラ', icon: '🏗️', gradient: 'from-slate-500 to-zinc-600' },
+const categoryMeta: Record<string, { label: string; icon: IconName; gradient: string }> = {
+  automation: { label: '自動化', icon: 'zap', gradient: 'from-amber-500 to-orange-600' },
+  ai: { label: 'AI', icon: 'bot', gradient: 'from-violet-500 to-purple-600' },
+  security: { label: 'セキュリティ', icon: 'lock', gradient: 'from-emerald-500 to-teal-600' },
+  'dev-tips': { label: 'Tips', icon: 'lightbulb', gradient: 'from-cyan-500 to-blue-600' },
+  projects: { label: 'プロジェクト', icon: 'rocket', gradient: 'from-pink-500 to-rose-600' },
+  web: { label: 'Web', icon: 'globe', gradient: 'from-blue-500 to-indigo-600' },
+  infrastructure: { label: 'インフラ', icon: 'building2', gradient: 'from-slate-500 to-zinc-600' },
 };
 
 const formatDate = (dateStr: string) => {
@@ -104,7 +106,7 @@ const ctaVariant = ctaVariantMap[category] || 'general';
           href={`/category/${category}`}
           class={`inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-full bg-gradient-to-r ${meta.gradient} text-white hover:shadow-lg hover:shadow-${category === 'ai' ? 'purple' : 'cyan'}-500/25 transition-all`}
         >
-          <span>{meta.icon}</span>
+          <Icon name={meta.icon} size={16} />
           {meta.label}
         </a>
         <span class="text-dark-500">•</span>
@@ -164,7 +166,7 @@ const ctaVariant = ctaVariantMap[category] || 'general';
         <div class="relative p-8">
           <div class="flex items-start gap-4">
             <div class="flex-shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
-              <span class="text-xl">📖</span>
+              <Icon name="bookOpen" size={24} class="text-white" />
             </div>
             <div class="flex-1">
               <h3 class="text-lg font-bold text-white mb-2">
@@ -194,7 +196,7 @@ const ctaVariant = ctaVariantMap[category] || 'general';
     {amazonProducts.length > 0 && (
       <div class="my-12">
         <h3 class="text-lg font-bold text-white mb-6 flex items-center gap-2">
-          <span class="text-xl">🛒</span>
+          <Icon name="shoppingCart" size={22} class="text-white" />
           関連商品
         </h3>
         <div class="space-y-4">
@@ -213,13 +215,13 @@ const ctaVariant = ctaVariantMap[category] || 'general';
       <div class="grid md:grid-cols-2 gap-8">
         <div>
           <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <span>🔗</span> この記事をシェア
+            <Icon name="share2" size={20} /> この記事をシェア
           </h3>
           <ShareButtons title={title} url={Astro.url.href} />
         </div>
         <div>
           <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <span>💖</span> 著者を支援
+            <Icon name="heart" size={20} class="text-accent-pink" /> 著者を支援
           </h3>
           <SupportButtons />
         </div>
@@ -229,8 +231,8 @@ const ctaVariant = ctaVariantMap[category] || 'general';
     <!-- Author -->
     <div class="mt-12 p-6 rounded-2xl bg-white/[0.02] border border-white/5">
       <div class="flex items-center gap-4">
-        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center text-2xl">
-          👨‍💻
+        <div class="w-16 h-16 rounded-full bg-gradient-to-br from-accent-cyan to-accent-purple flex items-center justify-center text-white">
+          <Icon name="code" size={28} />
         </div>
         <div>
           <p class="font-medium text-white">{author}</p>

@@ -1,4 +1,7 @@
 ---
+import { icons } from './icons';
+import type { IconName } from './icons';
+
 interface Props {
   variant?: 'automation' | 'security' | 'appdev' | 'general';
 }
@@ -7,7 +10,7 @@ const { variant = 'general' } = Astro.props;
 
 const VARIANTS = {
   automation: {
-    icon: '⚡',
+    icon: 'zap' as IconName,
     accent: '#00d4aa',
     accentDim: 'rgba(0,212,170,0.12)',
     tagline: 'この自動化、あなたの業務にも',
@@ -19,7 +22,7 @@ const VARIANTS = {
     badges: ['LLM / RAG', '画像生成AI', 'SNS自動運用', 'データ収集'],
   },
   security: {
-    icon: '🛡',
+    icon: 'shield' as IconName,
     accent: '#4dabf7',
     accentDim: 'rgba(77,171,247,0.12)',
     tagline: 'セキュリティは後付けではなく標準装備',
@@ -31,7 +34,7 @@ const VARIANTS = {
     badges: ['認証/認可設計', 'RLS', 'E2Eテスト', '脆弱性対策'],
   },
   appdev: {
-    icon: '🚀',
+    icon: 'rocket' as IconName,
     accent: '#b197fc',
     accentDim: 'rgba(177,151,252,0.12)',
     tagline: 'アイデアをプロダクトに',
@@ -43,7 +46,7 @@ const VARIANTS = {
     badges: ['React / Next.js', 'iOS / Android', '課金実装', 'MVP開発'],
   },
   general: {
-    icon: '💼',
+    icon: 'briefcase' as IconName,
     accent: '#00d4aa',
     accentDim: 'rgba(0,212,170,0.12)',
     tagline: '技術でビジネスを加速する',
@@ -76,7 +79,7 @@ const v = VARIANTS[variant] || VARIANTS.general;
 
     <!-- Tagline -->
     <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded mb-4" style={`background: ${v.accentDim}; border: 1px solid ${v.accent}25;`}>
-      <span class="text-sm">{v.icon}</span>
+      <span class="inline-flex w-[14px] h-[14px]" style={`color: ${v.accent}`} set:html={icons[v.icon]} />
       <span class="text-[11px] font-mono font-semibold tracking-wide" style={`color: ${v.accent}`}>
         {v.tagline}
       </span>
@@ -126,8 +129,8 @@ const v = VARIANTS[variant] || VARIANTS.general;
 
     <!-- Credentials -->
     <div class="mt-5 pt-4 border-t border-[#1a2232] flex items-center gap-4 text-[10px] font-mono text-[#4a5c72] tracking-wide">
-      <span>🛡 情報処理安全確保支援士 (RISS)</span>
-      <span>📋 プロジェクトマネージャ (PM)</span>
+      <span class="inline-flex items-center gap-1"><span class="inline-flex w-[12px] h-[12px]" set:html={icons.shield} /> 情報処理安全確保支援士 (RISS)</span>
+      <span class="inline-flex items-center gap-1"><span class="inline-flex w-[12px] h-[12px]" set:html={icons.clipboardList} /> プロジェクトマネージャ (PM)</span>
     </div>
   </div>
 </div>
