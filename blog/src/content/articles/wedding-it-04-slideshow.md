@@ -5,7 +5,7 @@ pubDate: "2026-03-08"
 updatedDate: "2026-03-08"
 category: "dev-tips"
 tags: ["NextJS", "Supabase", "PostgreSQL", "FramerMotion", "Realtime"]
-author: "tinou"
+author: "Secure Auto Lab"
 ---
 
 # 写真が流れるスライドショーを作った話
