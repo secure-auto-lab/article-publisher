@@ -26,12 +26,13 @@ npm run preview
 `public/og-default.png`（1200x630）。再生成するときは `og/og-default.html` を
 ビューポート 1200x630 の headless Chromium で開いてスクリーンショットを撮る。
 
-## デプロイ（未設定・要作業）
+## デプロイ（設定済み）
 
-既存 blog は Cloudflare Pages の GitHub 連携（プロジェクト `article-publisher`、
-ビルドは `blog/`）で自動デプロイされている。fx-blog 用には Cloudflare Pages で
-**新規プロジェクトの作成が必要**:
+Cloudflare Pages プロジェクト `fx-blog`（wrangler 直接アップロード方式）。
 
-1. Cloudflare Pages で新プロジェクトを作成し、このリポジトリを連携
-2. Root directory: `fx-blog` / Build command: `npm run build` / Output: `dist`
-3. カスタムドメイン `fx-blog.secure-auto-lab.com` を割り当て（DNS は同ゾーンなので自動）
+- 本番: https://fx-blog.secure-auto-lab.com （pages.dev: https://fx-blog-4zk.pages.dev）
+- `fx-blog/**` に変更を push すると `.github/workflows/deploy-fx-blog.yml` が
+  ビルド・デプロイし、カスタムドメインと CNAME レコードも冪等に確保する
+- 手動デプロイ: `npm run build && npx wrangler pages deploy dist --project-name fx-blog --branch main`
+- 注意: 既存 blog と違いダッシュボードの GitHub 連携ではないため、
+  デプロイ設定の変更はワークフローファイル側で行う
