@@ -1,0 +1,31 @@
+---
+title: "口座が消えた日 — 5回ゼロにした私が、AIと「負けない仕組み」を作り始めるまで"
+description: "FXで5回以上口座をゼロにした会社員が、AIと敗因を数字で解剖し、自動売買を作り直すまでの記録。第0部・無料公開。"
+pubDate: 2026-08-XX
+series: "全損から始める自動売買"
+seriesIndex: 0
+paid: false          # 有料記事は true（表示制御は将来実装）
+hasPromotion: false  # アフィリエイトリンクを含む記事は true → AdDisclosure を先頭に表示
+heroImage: "/figures/fig1_timeline.png"
+tags: ["FX", "自動売買", "検証記録"]
+draft: true
+---
+
+import Figure from "../../components/Figure.astro";
+import Disclaimer from "../../components/Disclaimer.astro";
+
+{/* 本文は articles/第0部_初稿.md を流し込む。[図1][図2]は以下の形で挿入 */}
+
+<Figure src="/figures/fig1_timeline.png" alt="入金と破綻のタイムライン（2021-2026）"
+  caption="図1｜入金と破綻のタイムライン。同じ金額の入金が繰り返される履歴そのものが記録になっている" />
+
+<Figure src="/figures/fig2_seriesmap.png" alt="連載の全体マップ"
+  caption="図2｜連載の全体マップ" />
+
+<Disclaimer />
+
+{/* Disclaimer.astro の定型文言（全記事共通・変更時はコンポーネント側を修正）:
+本連載は個人の取引記録と検証過程の共有であり、投資助言ではありません。
+FX取引には元本を超える損失が生じる可能性があります。掲載する数値は執筆時点の
+検証結果であり、将来の成果を保証しません。取引の判断は各自の責任でお願いします。
+*/}

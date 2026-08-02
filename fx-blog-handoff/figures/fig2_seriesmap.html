@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ja"><head><meta charset="utf-8">
+<style>
+  :root{
+    --page:#F0EEE6; --surface:#FCFCFB; --ink:#191919; --ink2:#52514E; --muted:#898781;
+    --accent:#CC785C; --blue:#2A78D6; --border:rgba(11,11,11,.10);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--page);font-family:"Noto Sans CJK JP","Noto Sans JP",system-ui,sans-serif;padding:28px}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:32px 40px;width:920px}
+  h1{font-family:"Noto Serif CJK JP","Noto Serif JP",Georgia,serif;font-size:26px;color:var(--ink);font-weight:600}
+  .sub{font-size:14px;color:var(--ink2);margin:6px 0 24px}
+  .rail{position:relative;margin-left:10px}
+  .rail::before{content:"";position:absolute;left:17px;top:24px;bottom:70px;width:2px;background:#E1E0D9}
+  .node{position:relative;display:flex;gap:18px;padding:10px 0 10px 0;align-items:flex-start}
+  .dot{flex:0 0 36px;height:36px;border-radius:50%;background:var(--surface);border:2.5px solid var(--accent);
+       color:var(--accent);font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center;z-index:1}
+  .dot.zero{background:var(--accent);color:#fff}
+  .dot.mag{border-color:var(--blue);color:var(--blue);border-style:dashed}
+  .body{padding-top:2px}
+  .t{font-size:18px;font-weight:700;color:var(--ink)}
+  .t .badge{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:2px 10px;margin-left:10px;vertical-align:2px}
+  .badge.free{background:var(--accent);color:#fff}
+  .badge.paid{border:1.5px solid #C3C2B7;color:var(--ink2)}
+  .badge.auto{border:1.5px solid var(--blue);color:var(--blue)}
+  .d{font-size:14px;color:var(--ink2);margin-top:3px;line-height:1.6}
+  .group{position:absolute;right:44px;top:118px;bottom:168px;width:26px;border-right:2px solid #E1E0D9;border-top:2px solid #E1E0D9;border-bottom:2px solid #E1E0D9;border-radius:0 10px 10px 0}
+  .glabel{position:absolute;right:6px;top:50%;transform:rotate(90deg) translate(-50%,0);transform-origin:right center;
+          font-size:13px;color:var(--muted);white-space:nowrap;letter-spacing:.08em;writing-mode:vertical-rl}
+  .wrap{position:relative;padding-right:20px}
+  .foot{font-size:12px;color:var(--muted);margin-top:18px}
+</style></head><body>
+<div class="card">
+  <h1>図2｜連載の全体マップ</h1>
+  <div class="sub">全損の記録から始まり、検証で棄却を積み上げ、生き残った一つを実運用に載せるまで</div>
+  <div class="wrap">
+    <div class="rail">
+      <div class="node"><div class="dot zero">0</div><div class="body">
+        <div class="t">口座が消えた日<span class="badge free">無料公開</span></div>
+        <div class="d">5回の全損と「またか」。AIに明細を渡すまでの話</div></div></div>
+      <div class="node"><div class="dot">1</div><div class="body">
+        <div class="t">敗因の解剖<span class="badge paid">有料</span></div>
+        <div class="d">取引明細×実レートで見る「99%勝てるのに破産する」構造</div></div></div>
+      <div class="node"><div class="dot">2</div><div class="body">
+        <div class="t">手法の墓場<span class="badge paid">有料</span></div>
+        <div class="d">ナンピン・逆張り・ドテン…検証で棄却した戦略たちと、棄却できる物差しの作り方</div></div></div>
+      <div class="node"><div class="dot">3</div><div class="body">
+        <div class="t">コストの真実<span class="badge paid">有料</span></div>
+        <div class="d">広告スプレッドは実測の2.6〜3.8倍嘘をつく。自作ロガーによる業者実測比較</div></div></div>
+      <div class="node"><div class="dot">4</div><div class="body">
+        <div class="t">生き残った一つ<span class="badge paid">有料</span></div>
+        <div class="d">15年・4万トレードの検証を耐えたシンプルな仕組みと、過学習との戦い</div></div></div>
+      <div class="node"><div class="dot">5</div><div class="body">
+        <div class="t">実弾前夜<span class="badge paid">有料</span></div>
+        <div class="d">EA実装・撤退基準・運用ルールブック。「負け方」を先に決める</div></div></div>
+      <div class="node"><div class="dot mag">∞</div><div class="body">
+        <div class="t">リアルタイム運用記<span class="badge auto">連載（自動生成＋人の承認）</span></div>
+        <div class="d">実口座の成績を、良くても悪くても改変せず公開する週次・日次の記録</div></div></div>
+    </div>
+  </div>
+  <div class="foot">本連載は個人の記録・検証の共有であり、投資助言ではない。</div>
+</div>
+</body></html>
