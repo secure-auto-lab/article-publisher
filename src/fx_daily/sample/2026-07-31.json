@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "date": "2026-07-31",
+  "account": {
+    "balance_jpy": 200300,
+    "equity_jpy": 200300,
+    "start_balance_jpy": 200000,
+    "month_start_balance_jpy": 200000
+  },
+  "signals": {
+    "detected": 3,
+    "skipped_z": 1,
+    "skipped_spread": 1,
+    "entered": 1,
+    "entries_by_z": {"z2": 1}
+  },
+  "pnl": {"day_pips": -9.0, "day_jpy": -900},
+  "slippage": {"measured_avg_pips": 0.7, "backtest_assumption_pips": 0.6, "samples": 1},
+  "notes": "逆行して撤退ルール通り決済。"
+}

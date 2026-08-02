@@ -1,0 +1,70 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JudgmentBadge from '../../components/JudgmentBadge.astro';
+
+const entries = (await getCollection('daily', ({ data }) => data.approved)).sort(
+  (a, b) => b.data.date.valueOf() - a.data.date.valueOf()
+);
+
+const fmtJpy = (v: number) => `${v > 0 ? '+' : ''}${v.toLocaleString('ja-JP')}円`;
+---
+
+<BaseLayout
+  title="リアルタイム運用記 | secure-auto-lab FXラボ"
+  description="実口座の成績を、良くても悪くても改変せず公開する日次の運用記録。数値は自動集計、コメントのみローカルLLM生成+人の承認。"
+>
+  <main class="mx-auto max-w-[720px] px-5">
+    <section class="my-10">
+      <h1 class="font-serif-jp text-2xl font-semibold tracking-wide">リアルタイム運用記</h1>
+      <p class="mt-3 text-sm leading-relaxed text-ink-secondary">
+        実口座の成績を、良くても悪くても改変せず公開する日次の記録。
+        数値は取引ログから自動集計し、コメントのみローカルLLMが下書きして人が承認しています。
+      </p>
+
+      {
+        entries.length > 0 ? (
+          <div class="mt-8 overflow-x-auto rounded-2xl border border-hairline bg-surface">
+            <table class="w-full text-sm">
+              <thead>
+                <tr class="border-b-[1.5px] border-axis text-left text-xs text-muted">
+                  <th class="px-4 py-3 font-semibold">日付</th>
+                  <th class="px-4 py-3 font-semibold">判定</th>
+                  <th class="px-4 py-3 text-right font-semibold">当日</th>
+                  <th class="px-4 py-3 text-right font-semibold">開始来</th>
+                </tr>
+              </thead>
+              <tbody>
+                {entries.map((entry) => (
+                  <tr class="border-b border-grid last:border-0">
+                    <td class="px-4 py-3">
+                      <a href={`/daily/${entry.id}/`} class="text-accent hover:underline">
+                        {entry.data.date.toISOString().slice(0, 10)}
+                      </a>
+                    </td>
+                    <td class="px-4 py-3">
+                      <JudgmentBadge judgment={entry.data.judgment} label={entry.data.judgmentLabel} />
+                    </td>
+                    <td
+                      class:list={[
+                        'px-4 py-3 text-right tabular-nums',
+                        entry.data.metrics.dayJpy < 0 ? 'text-critical' : '',
+                      ]}
+                    >
+                      {fmtJpy(entry.data.metrics.dayJpy)}
+                    </td>
+                    <td class="px-4 py-3 text-right tabular-nums">{fmtJpy(entry.data.metrics.totalJpy)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p class="mt-8 rounded-2xl border border-hairline bg-surface px-6 py-8 text-ink-secondary">
+            運用記は準備中です。実弾運用の開始とともに、ここに日次の記録が並びます。
+          </p>
+        )
+      }
+    </section>
+  </main>
+</BaseLayout>

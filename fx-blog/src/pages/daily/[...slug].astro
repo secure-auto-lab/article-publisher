@@ -1,0 +1,121 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import JudgmentBadge from '../../components/JudgmentBadge.astro';
+import Disclaimer from '../../components/Disclaimer.astro';
+
+export async function getStaticPaths() {
+  const entries = await getCollection('daily', ({ data }) => data.approved);
+  return entries.map((entry) => ({
+    params: { slug: entry.id },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { title, date, judgment, judgmentLabel, llmGenerated, figure, metrics, signals, slippage, judgmentReasons } =
+  entry.data;
+const { Content } = await render(entry);
+
+const dateLabel = date.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+const fmtJpy = (v: number) => `${v > 0 ? '+' : ''}${v.toLocaleString('ja-JP')}円`;
+const fmtPips = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(1)} pips`;
+---
+
+<BaseLayout title={`${title} | secure-auto-lab FXラボ`} description={`${dateLabel}の運用記録。総合判定: ${judgmentLabel}`} ogType="article">
+  <main class="mx-auto max-w-[720px] px-5">
+    <article class="my-10 rounded-2xl border border-hairline bg-surface px-6 py-10 sm:px-10">
+      <header>
+        <div class="flex flex-wrap items-center gap-3 text-sm text-muted">
+          <a href="/daily/" class="hover:text-accent">リアルタイム運用記</a>
+        </div>
+        <h1 class="mt-3 flex flex-wrap items-center gap-4 font-serif-jp text-2xl font-semibold tracking-wide">
+          {title}
+          <JudgmentBadge judgment={judgment} label={judgmentLabel} />
+        </h1>
+        {
+          judgmentReasons.length > 0 && (
+            <p class="mt-2 text-xs text-muted">判定根拠: {judgmentReasons.join(' / ')}</p>
+          )
+        }
+      </header>
+
+      <div class="prose-fx">
+        <h2>本日のシグナル</h2>
+        <table>
+          <thead>
+            <tr><th>発生</th><th>見送り（z不足）</th><th>見送り（スプレッド）</th><th>エントリー</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="!text-right">{signals.detected}</td>
+              <td>{signals.skippedZ}</td>
+              <td>{signals.skippedSpread}</td>
+              <td>
+                {signals.entered}
+                {signals.entriesByZ && Object.keys(signals.entriesByZ).length > 0 && (
+                  <span class="text-xs text-muted">
+                    （{Object.entries(signals.entriesByZ).map(([k, v]) => `${k}: ${v}`).join(', ')}）
+                  </span>
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>損益</h2>
+        <table>
+          <thead>
+            <tr><th>当日</th><th>当日（円）</th><th>月初来</th><th>開始来</th><th>開始来DD</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="!text-right">{fmtPips(metrics.dayPips)}</td>
+              <td class:list={[metrics.dayJpy < 0 ? 'text-critical' : '']}>{fmtJpy(metrics.dayJpy)}</td>
+              <td class:list={[metrics.mtdJpy < 0 ? 'text-critical' : '']}>{fmtJpy(metrics.mtdJpy)}</td>
+              <td class:list={[metrics.totalJpy < 0 ? 'text-critical' : '']}>
+                {fmtJpy(metrics.totalJpy)}（{metrics.totalPct > 0 ? '+' : ''}{metrics.totalPct}%）
+              </td>
+              <td>{metrics.drawdownPct}%</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <figure>
+          <img src={figure} alt={`エクイティカーブ（${dateLabel}時点）`} loading="lazy" decoding="async" />
+          <figcaption>エクイティカーブ（開始来・実測値）</figcaption>
+        </figure>
+
+        <h2>スリッページ実測 vs バックテスト前提</h2>
+        <table>
+          <thead>
+            <tr><th>実測平均</th><th>バックテスト前提</th><th>サンプル数</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="!text-right">{slippage.measuredPips === null ? '—（約定なし）' : `${slippage.measuredPips} pips`}</td>
+              <td>{slippage.assumptionPips} pips</td>
+              <td>{slippage.samples}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <h2>コメント</h2>
+        <Content />
+        {
+          llmGenerated && (
+            <p class="mt-2 text-xs text-muted">
+              ※ コメントはローカルLLMによる下書きを人が確認・承認したものです。数値はすべて取引ログからの自動集計です。
+            </p>
+          )
+        }
+      </div>
+
+      <Disclaimer />
+    </article>
+
+    <p class="mb-10 text-center text-sm">
+      <a href="/daily/" class="text-accent hover:underline">← 運用記一覧に戻る</a>
+    </p>
+  </main>
+</BaseLayout>

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "date": "2026-07-30",
+  "account": {
+    "balance_jpy": 201200,
+    "equity_jpy": 201200,
+    "start_balance_jpy": 200000,
+    "month_start_balance_jpy": 200000
+  },
+  "signals": {
+    "detected": 2,
+    "skipped_z": 1,
+    "skipped_spread": 0,
+    "entered": 1,
+    "entries_by_z": {"z2": 1}
+  },
+  "pnl": {"day_pips": 12.0, "day_jpy": 1200},
+  "slippage": {"measured_avg_pips": 0.4, "backtest_assumption_pips": 0.6, "samples": 1},
+  "notes": "初日。USDJPYで1回エントリー、順行して利確。"
+}

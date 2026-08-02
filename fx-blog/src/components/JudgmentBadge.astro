@@ -1,0 +1,18 @@
+---
+interface Props {
+  judgment: 'normal' | 'L1' | 'L2' | 'L3';
+  label: string;
+}
+
+const { judgment, label } = Astro.props;
+
+// 意味色の規律: 緑=正常のみ / 赤=警戒・停止のみ（design-tokens）
+const styles = {
+  normal: 'bg-good text-white',
+  L1: 'border border-axis text-ink-secondary',
+  L2: 'border-[1.5px] border-critical text-critical',
+  L3: 'bg-critical text-white',
+}[judgment];
+---
+
+<span class={`rounded-full px-3 py-0.5 text-xs font-semibold ${styles}`}>{label}</span>

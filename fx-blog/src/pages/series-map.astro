@@ -94,6 +94,10 @@ const nodes = [
                       <a href={`/posts/${post.id}/`} class="hover:text-accent">
                         {node.title}
                       </a>
+                    ) : node.badge === 'auto' ? (
+                      <a href="/daily/" class="hover:text-accent">
+                        {node.title}
+                      </a>
                     ) : (
                       node.title
                     )}

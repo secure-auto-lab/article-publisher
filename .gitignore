@@ -46,3 +46,6 @@ test-results/
 
 # fx-blog site assets (figures, OGP) are content, not screenshots
 !fx-blog/public/**/*.png
+
+# fx-daily scheduler log
+fx-daily.log

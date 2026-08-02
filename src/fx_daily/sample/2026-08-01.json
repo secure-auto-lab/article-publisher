@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "date": "2026-08-01",
+  "account": {
+    "balance_jpy": 202100,
+    "equity_jpy": 202100,
+    "start_balance_jpy": 200000,
+    "month_start_balance_jpy": 200300
+  },
+  "signals": {
+    "detected": 1,
+    "skipped_z": 0,
+    "skipped_spread": 0,
+    "entered": 1,
+    "entries_by_z": {"z3": 1}
+  },
+  "pnl": {"day_pips": 18.0, "day_jpy": 1800},
+  "slippage": {"measured_avg_pips": 0.5, "backtest_assumption_pips": 0.6, "samples": 1},
+  "notes": "z3シグナル1件、順行。"
+}
