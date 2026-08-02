@@ -38,3 +38,29 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: pages deploy fx-blog/dist --project-name fx-blog --branch main
+
+      # カスタムドメインとCNAMEを冪等に確保（既存ならスキップ）
+      - name: Ensure custom domain and DNS record
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          ZONE_ID: f0dc6b393073103a3904dc3bf8d0a4b8 # secure-auto-lab.com
+        run: |
+          curl -s -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/fx-blog/domains" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"name":"fx-blog.secure-auto-lab.com"}' || true
+
+          EXISTING=$(curl -s \
+            "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records?type=CNAME&name=fx-blog.secure-auto-lab.com" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}")
+          if echo "$EXISTING" | grep -q '"count":0\|"result":\[\]'; then
+            curl -s -X POST \
+              "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/dns_records" \
+              -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              -d '{"type":"CNAME","name":"fx-blog","content":"fx-blog-4zk.pages.dev","ttl":1,"proxied":true,"comment":"fx-blog Cloudflare Pages"}'
+          else
+            echo "CNAME already exists, skipping"
+          fi
