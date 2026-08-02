@@ -1,0 +1,170 @@
+@import "tailwindcss";
+
+@theme {
+  --color-page: #F0EEE6;
+  --color-surface: #FCFCFB;
+  --color-ink: #191919;
+  --color-ink-secondary: #52514E;
+  --color-muted: #898781;
+  --color-hairline: rgba(11, 11, 11, 0.10);
+  --color-grid: #E1E0D9;
+  --color-axis: #C3C2B7;
+  --color-accent: #CC785C;
+  --color-accent-blue: #2A78D6;
+  --color-critical: #D03B3B;
+  --color-good: #0CA30C;
+
+  --font-serif-jp: "Noto Serif JP", Georgia, serif;
+  --font-sans-jp: "Noto Sans JP", system-ui, sans-serif;
+}
+
+html {
+  background: var(--color-page);
+  color: var(--color-ink);
+  font-family: var(--font-sans-jp);
+}
+
+/* 記事本文（design-tokens: 16-17px / lh 1.9 / 段落間 1.5em / 幅 720px） */
+.prose-fx {
+  font-size: 17px;
+  line-height: 1.9;
+  color: var(--color-ink);
+}
+
+.prose-fx p {
+  margin-top: 1.5em;
+}
+
+.prose-fx h2,
+.prose-fx h3 {
+  font-family: var(--font-serif-jp);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  margin-top: 2.2em;
+  line-height: 1.5;
+}
+
+.prose-fx h2 {
+  font-size: 1.45rem;
+}
+
+.prose-fx h3 {
+  font-size: 1.2rem;
+}
+
+.prose-fx a {
+  color: var(--color-accent);
+  text-decoration: none;
+}
+
+.prose-fx a:hover {
+  text-decoration: underline;
+}
+
+.prose-fx strong {
+  font-weight: 700;
+}
+
+.prose-fx ul,
+.prose-fx ol {
+  margin-top: 1.5em;
+  padding-left: 1.6em;
+}
+
+.prose-fx ul {
+  list-style: disc;
+}
+
+.prose-fx ol {
+  list-style: decimal;
+}
+
+.prose-fx li {
+  margin-top: 0.4em;
+}
+
+.prose-fx blockquote {
+  margin-top: 1.5em;
+  background: var(--color-page);
+  border-left: 3px solid var(--color-accent);
+  padding: 0.8em 1.2em;
+  color: var(--color-ink-secondary);
+}
+
+.prose-fx blockquote p {
+  margin-top: 0.6em;
+}
+
+.prose-fx blockquote p:first-child {
+  margin-top: 0;
+}
+
+.prose-fx hr {
+  border: 0;
+  border-top: 1px solid var(--color-grid);
+  margin: 2.5em 0;
+}
+
+.prose-fx table {
+  width: 100%;
+  margin-top: 1.5em;
+  border-collapse: collapse;
+  font-size: 15px;
+}
+
+.prose-fx thead th {
+  border-bottom: 1.5px solid var(--color-axis);
+  text-align: left;
+  padding: 0.5em 0.8em;
+  font-weight: 600;
+}
+
+.prose-fx tbody td {
+  border-bottom: 1px solid var(--color-grid);
+  padding: 0.5em 0.8em;
+}
+
+.prose-fx td:not(:first-child),
+.prose-fx th:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.prose-fx figure {
+  margin-top: 2em;
+}
+
+.prose-fx figure img {
+  max-width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--color-hairline);
+}
+
+.prose-fx figcaption {
+  margin-top: 0.7em;
+  font-size: 13px;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+.prose-fx code {
+  font-size: 0.9em;
+  background: var(--color-page);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+.prose-fx pre {
+  margin-top: 1.5em;
+  border: 1px solid var(--color-hairline);
+  border-radius: 12px;
+  padding: 1em 1.2em;
+  font-size: 14px;
+  line-height: 1.7;
+  overflow-x: auto;
+}
+
+.prose-fx pre code {
+  background: none;
+  padding: 0;
+}

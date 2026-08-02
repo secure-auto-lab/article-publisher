@@ -1,0 +1,66 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import BaseLayout from './BaseLayout.astro';
+import PaidBadge from '../components/PaidBadge.astro';
+import AdDisclosure from '../components/AdDisclosure.astro';
+import Disclaimer from '../components/Disclaimer.astro';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+
+const { post } = Astro.props;
+const { title, description, pubDate, updatedDate, series, seriesIndex, paid, hasPromotion, heroImage, tags } =
+  post.data;
+const dateLabel = pubDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' });
+---
+
+<BaseLayout title={`${title} | secure-auto-lab FXラボ`} description={description} ogImage={heroImage} ogType="article">
+  <main class="mx-auto max-w-[720px] px-5">
+    <article class="my-10 rounded-2xl border border-hairline bg-surface px-6 py-10 sm:px-10">
+      <header>
+        <div class="flex flex-wrap items-center gap-3 text-sm text-muted">
+          <a href="/series-map/" class="hover:text-accent">{series}</a>
+          <span>第{seriesIndex}部</span>
+          <PaidBadge paid={paid} />
+        </div>
+        <h1 class="mt-4 font-serif-jp text-2xl font-semibold leading-snug tracking-wide sm:text-3xl">
+          {title}
+        </h1>
+        <div class="mt-4 flex flex-wrap items-center gap-3 text-sm text-ink-secondary">
+          <time datetime={pubDate.toISOString()}>{dateLabel} 公開</time>
+          {
+            updatedDate && (
+              <time datetime={updatedDate.toISOString()}>
+                {updatedDate.toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })} 更新
+              </time>
+            )
+          }
+        </div>
+        {
+          tags.length > 0 && (
+            <div class="mt-3 flex flex-wrap gap-2">
+              {tags.map((tag) => (
+                <span class="rounded-full border border-hairline px-2.5 py-0.5 text-xs text-ink-secondary">{tag}</span>
+              ))}
+            </div>
+          )
+        }
+      </header>
+
+      <hr class="my-8 border-grid" />
+
+      {hasPromotion && <AdDisclosure />}
+
+      <div class="prose-fx">
+        <slot />
+      </div>
+
+      <Disclaimer />
+    </article>
+
+    <p class="mb-10 text-center text-sm">
+      <a href="/" class="text-accent hover:underline">← 記事一覧に戻る</a>
+    </p>
+  </main>
+</BaseLayout>

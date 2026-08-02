@@ -1,0 +1,71 @@
+---
+import '@fontsource/noto-sans-jp/400.css';
+import '@fontsource/noto-sans-jp/700.css';
+import '@fontsource/noto-serif-jp/600.css';
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  ogImage?: string;
+  ogType?: string;
+}
+
+const { title, description, ogImage = '/og-default.png', ogType = 'website' } = Astro.props;
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage, Astro.site);
+const siteName = 'secure-auto-lab FXラボ';
+---
+
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="canonical" href={canonicalURL} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <link rel="alternate" type="application/rss+xml" title={siteName} href={new URL('rss.xml', Astro.site)} />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta property="og:site_name" content={siteName} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+  </head>
+  <body class="min-h-screen bg-page text-ink antialiased">
+    <header class="border-b border-hairline bg-surface">
+      <div class="mx-auto flex max-w-[960px] flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-5 py-5">
+        <a href="/" class="font-serif-jp text-xl font-semibold tracking-wide text-ink">
+          {siteName}
+        </a>
+        <nav class="flex gap-5 text-sm text-ink-secondary">
+          <a href="/" class="hover:text-accent">トップ</a>
+          <a href="/series-map/" class="hover:text-accent">連載マップ</a>
+          <a href="/about/" class="hover:text-accent">運営者情報</a>
+        </nav>
+      </div>
+    </header>
+
+    <slot />
+
+    <footer class="mt-16 border-t border-hairline bg-surface">
+      <div class="mx-auto max-w-[960px] px-5 py-8 text-sm text-ink-secondary">
+        <p class="text-xs leading-relaxed text-muted">
+          本サイトは個人の取引記録と検証過程の共有であり、投資助言ではありません。FX取引には元本を超える損失が生じる可能性があります。
+        </p>
+        <div class="mt-4 flex flex-wrap gap-5">
+          <a href="/about/" class="hover:text-accent">運営者情報</a>
+          <a href="/privacy/" class="hover:text-accent">プライバシーポリシー</a>
+          <a href="/rss.xml" class="hover:text-accent">RSS</a>
+        </div>
+        <p class="mt-4 text-xs text-muted">© 2026 secure-auto-lab</p>
+      </div>
+    </footer>
+  </body>
+</html>

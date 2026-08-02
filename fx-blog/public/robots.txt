@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://fx-blog.secure-auto-lab.com/sitemap-index.xml

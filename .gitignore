@@ -43,3 +43,6 @@ test-results/
 
 # Test screenshots
 *.png
+
+# fx-blog site assets (figures, OGP) are content, not screenshots
+!fx-blog/public/**/*.png

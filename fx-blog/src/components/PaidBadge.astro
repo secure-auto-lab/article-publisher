@@ -1,0 +1,15 @@
+---
+interface Props {
+  paid: boolean;
+}
+
+const { paid } = Astro.props;
+---
+
+{
+  paid ? (
+    <span class="rounded-full border border-axis px-2.5 py-0.5 text-xs font-semibold text-ink-secondary">有料</span>
+  ) : (
+    <span class="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-white">無料公開</span>
+  )
+}

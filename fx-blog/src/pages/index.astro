@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+
+const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+const latest = posts[0];
+---
+
+<BaseLayout
+  title="secure-auto-lab FXラボ | 全損から始める自動売買"
+  description="FXで5回以上口座をゼロにした会社員が、AIと敗因を数字で解剖し、自動売買を作り直すまでの検証記録。"
+>
+  <main class="mx-auto max-w-[960px] px-5">
+    <section class="my-12">
+      <p class="text-sm font-semibold tracking-widest text-accent">連載</p>
+      <h1 class="mt-2 font-serif-jp text-3xl font-semibold leading-snug tracking-wide sm:text-4xl">
+        全損から始める自動売買
+      </h1>
+      <p class="mt-4 max-w-[640px] leading-relaxed text-ink-secondary">
+        FXで5回以上口座をゼロにした会社員が、AIと一緒に「なぜ負けたのか」を数字で解剖し、自動売買の仕組みを作り直していく記録。
+        勝てる方法の話ではなく、「勝てそうに見えるものが、どうやって人を破産させるのか」の検証から始まります。
+      </p>
+      <div class="mt-6 flex flex-wrap gap-4">
+        {
+          latest && (
+            <a
+              href={`/posts/${latest.id}/`}
+              class="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
+            >
+              最新記事を読む
+            </a>
+          )
+        }
+        <a
+          href="/series-map/"
+          class="rounded-full border border-axis px-6 py-2.5 text-sm font-semibold text-ink-secondary transition-colors hover:border-accent hover:text-accent"
+        >
+          連載マップを見る
+        </a>
+      </div>
+    </section>
+
+    <section class="my-12">
+      <h2 class="font-serif-jp text-xl font-semibold tracking-wide">記事一覧</h2>
+      {
+        posts.length > 0 ? (
+          <div class="mt-6 grid gap-5 sm:grid-cols-2">
+            {posts.map((post) => (
+              <PostCard post={post} />
+            ))}
+          </div>
+        ) : (
+          <p class="mt-6 text-ink-secondary">記事は準備中です。</p>
+        )
+      }
+    </section>
+  </main>
+</BaseLayout>
