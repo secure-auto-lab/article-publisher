@@ -57,6 +57,18 @@ class NoteConverter(PlatformConverter):
     def convert(self, article: Article) -> str:
         content = self._strip_platform_blocks(article.content, "note")
 
+        # :::note-only ブロックは執筆者がNote向けに明示した内容のため、
+        # コードブロック除去などの自動整形から保護する(マーカー行自体は出力しない)
+        protected_blocks: list[str] = []
+
+        def _protect(match: re.Match) -> str:
+            protected_blocks.append(match.group(1))
+            return f"\x00NOTEONLY{len(protected_blocks) - 1}\x00"
+
+        content = re.sub(
+            r":::note-only\n(.*?)\n:::", _protect, content, flags=re.DOTALL
+        )
+
         # 技術的なセクションを見出し単位で除去
         content = self._remove_technical_sections(content)
 
@@ -77,6 +89,10 @@ class NoteConverter(PlatformConverter):
 
         # 連続空行を整理
         content = self._clean_empty_lines(content)
+
+        # 保護していた note-only ブロックを復元
+        for i, block in enumerate(protected_blocks):
+            content = content.replace(f"\x00NOTEONLY{i}\x00", block)
 
         # 末尾にブログ誘導リンクとNote用CTAを追加
         content = self._add_blog_link(content, article.slug)
