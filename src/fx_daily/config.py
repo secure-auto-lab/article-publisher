@@ -23,7 +23,7 @@ class JudgmentThresholds(BaseModel):
 
 class LlmConfig(BaseModel):
     base_url: str = "http://localhost:11434"  # GPU調停ゲートウェイ（Ollama本体は11435）
-    model: str = "qwen3.6:27b-q5_K_M"
+    model: str = "qwen3.8:27b"
     timeout_sec: float = 600.0  # gpu_lock 待機を考慮して長め
     max_retries: int = 3
     temperature: float = 0.4
